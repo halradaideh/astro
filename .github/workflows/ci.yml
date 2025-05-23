@@ -7,6 +7,11 @@ on:
     branches: [ 'main', 'develop' ]
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -155,15 +160,14 @@ jobs:
             core.setOutput('notes', releaseNotes);
         
       - name: Create Release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.versioning.outputs.new_version }}
-          release_name: Release v${{ steps.versioning.outputs.new_version }}
-          body: ${{ steps.release_notes.outputs.notes }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ steps.release_notes.outputs.notes }}" > release_notes.md
+          gh release create v${{ steps.versioning.outputs.new_version }} \
+            --title "Release v${{ steps.versioning.outputs.new_version }}" \
+            --notes-file release_notes.md
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
