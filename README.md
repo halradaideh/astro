@@ -1,7 +1,7 @@
 # Tech Blog with Astro + Giscus
 
-[![CI](https://github.com/$GITHUB_USERNAME/pale-parsec/actions/workflows/ci.yml/badge.svg)](https://github.com/$GITHUB_USERNAME/pale-parsec/actions/workflows/ci.yml)
-[![Deploy to Cloudflare Pages](https://github.com/$GITHUB_USERNAME/pale-parsec/actions/workflows/deploy.yml/badge.svg)](https://github.com/$GITHUB_USERNAME/pale-parsec/actions/workflows/deploy.yml)
+[![CI](https://github.com/halradaideh/tech-blog/actions/workflows/ci.yml/badge.svg)](https://github.com/halradaideh/tech-blog/actions/workflows/ci.yml)
+[![Deploy to Cloudflare Pages](https://github.com/halradaideh/tech-blog/actions/workflows/deploy.yml/badge.svg)](https://github.com/halradaideh/tech-blog/actions/workflows/deploy.yml)
 
 A modern, fast, and interactive blog built with Astro and Giscus comments system. This blog is designed to provide a great reading experience and community interaction through GitHub Discussions.
 
@@ -240,3 +240,94 @@ Check out [our documentation](https://docs.astro.build) or jump into our [Discor
 ## Credit
 
 This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+
+# Pale Parsec Blog
+
+A modern blog site built with Astro, featuring Giscus comments and Cloudflare Pages deployment.
+
+## Features
+
+- 🚀 Built with Astro for optimal performance
+- 💬 Giscus comments integration
+- 📱 Responsive design
+- 📝 MDX support for rich content
+- 🗺️ Sitemap generation
+- 📊 RSS feed
+- ☁️ Cloudflare Pages deployment
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the required values:
+
+```env
+# Giscus Configuration
+GISCUS_REPO=username/repo-name
+GISCUS_REPO_ID=your-repo-id
+GISCUS_CATEGORY_ID=your-category-id
+
+# Cloudflare Pages Configuration
+CLOUDFLARE_API_TOKEN=your-api-token
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+```
+
+## Contributing
+
+1. Create a feature branch from `develop`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit them:
+   ```bash
+   git commit -m "feat: add new feature"
+   ```
+
+3. Create a Pull Request with appropriate labels:
+   - Process Labels:
+     - `ready-to-review`: Code is ready for review
+     - `ready-to-test`: Code is ready for testing
+     - `ready-to-deploy`: Code is ready for deployment
+   - Version Labels:
+     - `major`: Breaking changes
+     - `minor`: New features
+     - No label: Bug fixes (patch)
+
+4. Wait for the CI workflow to complete:
+   - Build testing
+   - Version bump
+   - Release creation
+   - Deployment to Cloudflare Pages
+
+## Branch Strategy
+
+- `main`: Production branch
+- `develop`: Development branch
+- `feature/*`: Feature branches
+
+## Release Process
+
+Releases are automatically created when PRs with the `ready-to-deploy` label are merged into `main`. The version number is determined by the PR labels:
+
+- `major`: Breaking changes (1.0.0 → 2.0.0)
+- `minor`: New features (1.0.0 → 1.1.0)
+- `patch`: Bug fixes (default) (1.0.0 → 1.0.1)
+
+## License
+
+MIT

@@ -2,12 +2,38 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ 'feature/**', 'develop' ]
   pull_request:
-    branches: [ main ]
+    branches: [ 'main', 'develop' ]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
-  build:
+  validate:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const requiredLabels = ['ready-to-review', 'ready-to-test', 'ready-to-deploy'];
+            const missingLabels = requiredLabels.filter(l => !labels.includes(l));
+            
+            if (missingLabels.length > 0) {
+              core.setFailed(`Missing required labels: ${missingLabels.join(', ')}`);
+            }
+
+  test-build:
+    needs: validate
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'ready-to-test')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,9 +47,128 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Test build
+        run: |
+          npm run build
+          if [ $? -eq 0 ]; then
+            echo "Build successful!"
+          else
+            echo "Build failed!"
+            exit 1
+          fi
+
+  prepare-release:
+    needs: test-build
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.versioning.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
       - name: Build site
         run: npm run build
+
+      - name: Determine version bump
+        id: bump
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            let bump = 'patch';
+            if (labels.includes('major')) bump = 'major';
+            else if (labels.includes('minor')) bump = 'minor';
+            core.setOutput('bump', bump);
+
+      - name: Get latest version
+        id: versioning
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT_VERSION=${LATEST_TAG#v}
+          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+          
+          case "${{ steps.bump.outputs.bump }}" in
+            major)
+              NEW_VERSION="$((major + 1)).0.0"
+              ;;
+            minor)
+              NEW_VERSION="${major}.$((minor + 1)).0"
+              ;;
+            patch)
+              NEW_VERSION="${major}.${minor}.$((patch + 1))"
+              ;;
+          esac
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            
+            // Get PR details
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber
+            });
+            
+            // Get PR commits
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner,
+              repo,
+              pull_number: prNumber
+            });
+            
+            // Format commit messages
+            const commitList = commits.map(commit => {
+              const message = commit.commit.message.split('\n')[0];
+              return `- ${message}`;
+            }).join('\n');
+            
+            const releaseNotes = `
+            ## What's Changed
+            ${pr.body || 'No description provided.'}
+            
+            ## Commits
+            ${commitList}
+            
+            ## Author
+            @${pr.user.login}
+            
+            ## Labels
+            ${pr.labels.map(label => `\`${label.name}\``).join(', ')}
+            `;
+            
+            core.setOutput('notes', releaseNotes);
         
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ steps.release_notes.outputs.notes }}" > release_notes.md
+          gh release create v${{ steps.versioning.outputs.new_version }} \
+            --title "Release v${{ steps.versioning.outputs.new_version }}" \
+            --notes-file release_notes.md
+          
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
