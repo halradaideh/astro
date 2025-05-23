@@ -1,20 +1,16 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-    branches:
-      - main
+  release:
+    types: [published]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,6 +29,35 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: pale-parsec # Replace with your Cloudflare Pages project name
+          projectName: pale-parsec
           directory: dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }} 
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Update Release Notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const release = context.payload.release;
+            
+            // Get deployment URL from Cloudflare Pages (you might need to adjust this)
+            const deploymentUrl = 'https://pale-parsec.pages.dev';
+            
+            const updatedBody = `${release.body}
+            
+            ## Deployment
+            🚀 Successfully deployed to [Cloudflare Pages](${deploymentUrl})
+            
+            ### Version
+            ${release.tag_name}
+            
+            ### Deployment Time
+            ${new Date().toISOString()}
+            `;
+            
+            await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: release.id,
+              body: updatedBody
+            }); 
