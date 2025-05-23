@@ -1,11 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [ 'feature/**', 'develop' ]
   pull_request:
-    branches: [ 'main', 'develop' ]
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, labeled, unlabeled, closed]
 
 permissions:
   contents: write
@@ -15,14 +13,14 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
     steps:
       - name: Check labels
         uses: actions/github-script@v7
         with:
           script: |
             const labels = context.payload.pull_request.labels.map(l => l.name);
-            const requiredLabels = ['ready-to-review', 'ready-to-test', 'ready-to-deploy'];
+            const requiredLabels = ['ready-to-review', 'ready-to-test'];
             const missingLabels = requiredLabels.filter(l => !labels.includes(l));
             
             if (missingLabels.length > 0) {
@@ -61,7 +59,8 @@ jobs:
     needs: test-build
     if: |
       github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     outputs:
