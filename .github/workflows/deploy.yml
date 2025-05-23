@@ -4,9 +4,17 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+  deployments: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
+    concurrency: 
+      group: production
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +48,7 @@ jobs:
             const { owner, repo } = context.repo;
             const release = context.payload.release;
             
-            // Get deployment URL from Cloudflare Pages (you might need to adjust this)
+            // Get deployment URL from Cloudflare Pages
             const deploymentUrl = 'https://astro.pages.dev';
             
             const updatedBody = `${release.body}
