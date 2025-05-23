@@ -1,34 +1,31 @@
 ## Description
-This pull request sets up the initial project structure for our Astro-based tech blog with comprehensive CI/CD workflows. This PR was prepared with the assistance of an AI agent (Claude).
+This pull request improves the CI/CD workflows by simplifying the process and fixing deployment triggers. This PR was prepared with the assistance of an AI agent (Claude).
 
 ### Changes Include:
-- 🚀 Initial Astro project setup with modern blog layout
-- 💬 Giscus comments integration
-- 🔄 CI/CD workflow configuration
-- 📝 Environment variable structure
-- 📚 Comprehensive README
-- ☁️ Cloudflare Pages deployment setup
+- 🔄 Simplify PR label requirements (only `ready-to-review` and `ready-to-test` needed)
+- 🚀 Automatic release creation on PR merge to main
+- 🔒 Add proper permissions for GitHub Actions
+- 🌐 Add environment and concurrency settings for deployments
+- 🏗️ Improve deployment status tracking
 
 ### Technical Details:
-- Configured Astro with MDX, React, and sitemap integrations
-- Set up environment variables for Giscus and Cloudflare
-- Implemented proper project structure for blog content
-- Added deployment configuration for Cloudflare Pages
+- Remove `ready-to-deploy` label requirement
+- Add PR merge check for release creation
+- Add proper permissions for release and deployment actions
+- Add production environment configuration
+- Add concurrency settings to prevent parallel deployments
 
 ### Testing:
-- ✅ Project builds successfully
-- ✅ All dependencies are properly configured
-- ✅ Environment variables are properly structured
-
-### Notes:
-- This is a minor version bump as it introduces new features
-- No breaking changes are included
-- Ready for review and testing
+- ✅ Workflow triggers properly configured
+- ✅ Release creation automated on merge
+- ✅ Deployment triggered by release
+- ✅ Proper permissions set for all actions
 
 ### Post-Merge Actions:
-- First release will be created automatically
-- Cloudflare Pages deployment will be triggered
-- Version will be bumped according to labels
+- Merging a PR to main will automatically:
+  1. Create a new release
+  2. Trigger deployment to Cloudflare Pages
+  3. Update release notes with deployment status
 
 ---
 _This PR was structured and prepared with the assistance of an AI agent (Claude) to ensure best practices and comprehensive documentation._ 

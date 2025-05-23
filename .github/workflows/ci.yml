@@ -7,6 +7,8 @@ on:
   pull_request_target:
     types: [labeled, unlabeled]
     branches: [ 'main' ]
+  push:
+    branches: [ 'main' ]
 
 permissions:
   contents: write
@@ -35,10 +37,11 @@ jobs:
             }
 
   test-build:
-    needs: validate
+    needs: [validate]
     if: |
-      github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.labels.*.name, 'ready-to-test')
+      (github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'ready-to-test')) ||
+      github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,12 +66,14 @@ jobs:
           fi
 
   prepare-release:
-    needs: test-build
+    needs: [test-build]
     if: |
-      github.event_name == 'pull_request' &&
+      (github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       github.event.pull_request.merged == true &&
-      github.event.pull_request.base.ref == 'main'
+      github.event.pull_request.base.ref == 'main') ||
+      (github.event_name == 'push' &&
+      github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.versioning.outputs.new_version }}
