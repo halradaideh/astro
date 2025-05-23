@@ -29,7 +29,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: pale-parsec
+          projectName: astro
           directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           
@@ -41,7 +41,7 @@ jobs:
             const release = context.payload.release;
             
             // Get deployment URL from Cloudflare Pages (you might need to adjust this)
-            const deploymentUrl = 'https://pale-parsec.pages.dev';
+            const deploymentUrl = 'https://astro.pages.dev';
             
             const updatedBody = `${release.body}
             
