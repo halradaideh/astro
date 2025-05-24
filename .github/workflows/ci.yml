@@ -60,6 +60,7 @@ jobs:
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
           npm install
+          npm ci --install-links
 
       - name: Run ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx,.astro --no-cache
@@ -88,6 +89,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
+          npm install
           npm ci --install-links
 
       - name: Test build
@@ -129,6 +131,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
+          npm install
           npm ci --install-links
 
       - name: Build site
