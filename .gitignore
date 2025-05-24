@@ -25,3 +25,16 @@ pnpm-debug.log*
 
 # PR Description file
 pr_description.md
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.history/
+*.code-workspace
+.settings/
+
+# VS Code Local History
+.history
+.ionide
