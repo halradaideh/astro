@@ -273,19 +273,12 @@ jobs:
           directory: ${{ env.DIST_DIR }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          wranglerVersion: ${{ env.WRANGLER_VERSION }}
+          wranglerVersion: '${{ env.WRANGLER_VERSION }}'
           environmentVariables: |
             GISCUS_REPO=${{ env.GISCUS_REPO }}
             GISCUS_REPO_ID=${{ env.GISCUS_REPO_ID }}
             GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }}
             GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}
-
-      - name: Configure Custom Domain
-        if: steps.pages-deploy.outcome == 'success'
-        run: npx wrangler@${{ env.WRANGLER_VERSION }} pages domain set ${{ env.PROJECT_NAME }} ${{ env.CUSTOM_DOMAIN }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Update Deployment Status
         if: always()
