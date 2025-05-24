@@ -1,9 +1,9 @@
 ---
-title: "DDoS Protection with Cloudflare: From Basic to Advanced"
-description: "A comprehensive guide to implementing DDoS protection using Cloudflare, including WAF rules, rate limiting, and best practices for securing your infrastructure"
-pubDate: "2024-03-21"
-heroImage: "/blog/ddos-shield.jpg"
-tags: ["security", "cloudflare", "ddos", "waf", "cybersecurity", "matrix"]
+title: 'DDoS Protection with Cloudflare: From Basic to Advanced'
+description: 'A comprehensive guide to implementing DDoS protection using Cloudflare, including WAF rules, rate limiting, and best practices for securing your infrastructure'
+pubDate: '2024-03-21'
+heroImage: '/blog/ddos-shield.jpg'
+tags: ['security', 'cloudflare', 'ddos', 'waf', 'cybersecurity', 'matrix']
 ---
 
 # DDoS Protection with Cloudflare
@@ -105,6 +105,7 @@ if (http.requests_per_minute > 1000) {
 ### 1. Basic Setup
 
 1. **DNS Configuration**:
+
    ```bash
    # Point your domain to Cloudflare
    DOMAIN="example.com"
@@ -164,6 +165,7 @@ if (http.requests_per_minute > 1000) {
 ### 1. Traffic Analysis
 
 Monitor and analyze traffic patterns:
+
 ```python
 import requests
 
@@ -173,10 +175,10 @@ def analyze_traffic(zone_id, api_token):
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/json"
     }
-    
+
     response = requests.get(url, headers=headers)
     data = response.json()
-    
+
     # Analyze traffic patterns
     return {
         "total_requests": data["result"]["totals"]["requests"],
@@ -188,6 +190,7 @@ def analyze_traffic(zone_id, api_token):
 ### 2. Security Headers
 
 Implement security headers:
+
 ```nginx
 # Nginx configuration with security headers
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
@@ -199,6 +202,7 @@ add_header X-XSS-Protection "1; mode=block" always;
 ### 3. Origin Protection
 
 Secure your origin server:
+
 ```bash
 # Only allow Cloudflare IPs
 for ip in $(curl -s https://www.cloudflare.com/ips-v4); do
@@ -233,16 +237,19 @@ done
 ### 2. Incident Response Plan
 
 1. **Detection Phase**:
+
    - Monitor Cloudflare dashboard
    - Set up alerts
    - Track traffic patterns
 
 2. **Analysis Phase**:
+
    - Identify attack type
    - Assess impact
    - Review logs
 
 3. **Mitigation Phase**:
+
    - Adjust WAF rules
    - Enable additional protections
    - Scale resources if needed
@@ -275,16 +282,17 @@ done
 ```yaml
 # Load balancing configuration
 load_balancers:
-  - name: "production"
-    default_pools: ["primary", "secondary"]
-    fallback_pool: "backup"
-    session_affinity: "cookie"
-    steering_policy: "dynamic_latency"
+  - name: 'production'
+    default_pools: ['primary', 'secondary']
+    fallback_pool: 'backup'
+    session_affinity: 'cookie'
+    steering_policy: 'dynamic_latency'
 ```
 
 ## Conclusion
 
 A robust DDoS protection strategy using Cloudflare requires:
+
 - Proper configuration at multiple layers
 - Regular monitoring and updates
 - Incident response readiness
@@ -294,4 +302,4 @@ A robust DDoS protection strategy using Cloudflare requires:
 
 - [Cloudflare Documentation](https://developers.cloudflare.com/)
 - [DDoS Attack Trends](https://www.cloudflare.com/ddos-report/)
-- [Security Best Practices](https://www.cloudflare.com/security-best-practices/) 
+- [Security Best Practices](https://www.cloudflare.com/security-best-practices/)

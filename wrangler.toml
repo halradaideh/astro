@@ -1,0 +1,7 @@
+name = "blog-radaideh-info"
+compatibility_date = "2024-03-25"
+
+kv_namespaces = [
+  { binding = "VISIT_COUNTS", id = "YOUR_KV_ID" },
+  { binding = "LIKES", id = "YOUR_LIKES_KV_ID" }
+] 

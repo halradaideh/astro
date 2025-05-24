@@ -38,6 +38,41 @@ This blog is built with modern technologies:
 
 ## 🚀 Development
 
+### Prerequisites
+
+1. **Cloudflare Account Setup**
+
+   - Create a Cloudflare account
+   - Set up a Cloudflare Worker
+   - Create the following KV namespaces:
+     - `BLOG_STATS` - For storing blog statistics
+     - `BLOG_VIEWS` - For tracking page views
+     - `BLOG_REACTIONS` - For storing user reactions
+
+2. **Environment Variables**
+
+   ```bash
+   # Cloudflare
+   CLOUDFLARE_ACCOUNT_ID=your_account_id
+   CLOUDFLARE_API_TOKEN=your_api_token
+
+   # Giscus (GitHub Discussions)
+   GISCUS_REPO=your_repo
+   GISCUS_REPO_ID=your_repo_id
+   GISCUS_CATEGORY=your_category
+   GISCUS_CATEGORY_ID=your_category_id
+   ```
+
+3. **KV Namespace Bindings**
+   ```bash
+   # Bind KV namespaces to your worker
+   wrangler kv:namespace create BLOG_STATS
+   wrangler kv:namespace create BLOG_VIEWS
+   wrangler kv:namespace create BLOG_REACTIONS
+   ```
+
+### Development Commands
+
 ```bash
 # Install dependencies
 npm install
@@ -47,7 +82,32 @@ npm run dev
 
 # Build for production
 npm run build
+
+# Deploy to Cloudflare Workers
+npm run deploy
 ```
+
+### Cloudflare Worker Setup
+
+1. **Initialize Wrangler**
+
+   ```bash
+   npx wrangler init
+   ```
+
+2. **Configure wrangler.toml**
+
+   ```toml
+   name = "blog-worker"
+   main = "src/worker.ts"
+   compatibility_date = "2024-01-01"
+
+   kv_namespaces = [
+     { binding = "BLOG_STATS", id = "your_kv_id" },
+     { binding = "BLOG_VIEWS", id = "your_kv_id" },
+     { binding = "BLOG_REACTIONS", id = "your_kv_id" }
+   ]
+   ```
 
 ## 📝 Latest Articles
 
@@ -58,6 +118,7 @@ npm run build
 ## 🤖 AI Assistant
 
 This blog's design and structure were created with the assistance of Claude AI, Anthropic's advanced language model. The AI helped in:
+
 - Designing the modern, responsive layout
 - Implementing cybersecurity-themed components
 - Optimizing the site structure

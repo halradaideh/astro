@@ -2,13 +2,14 @@
 // Get these values from https://giscus.app after setting up:
 const GISCUS_REPO = import.meta.env.GISCUS_REPO; // format: username/repository
 const GISCUS_REPO_ID = import.meta.env.GISCUS_REPO_ID;
-const GISCUS_CATEGORY = "Announcements"; // This is the default
+const GISCUS_CATEGORY = 'Announcements'; // This is the default
 const GISCUS_CATEGORY_ID = import.meta.env.GISCUS_CATEGORY_ID;
 ---
 
 <div class="comments-container">
   <h2>Comments</h2>
-  <script src="https://giscus.app/client.js"
+  <script
+    src="https://giscus.app/client.js"
     data-repo={GISCUS_REPO}
     data-repo-id={GISCUS_REPO_ID}
     data-category={GISCUS_CATEGORY}
@@ -22,8 +23,7 @@ const GISCUS_CATEGORY_ID = import.meta.env.GISCUS_CATEGORY_ID;
     data-lang="en"
     data-loading="lazy"
     crossorigin="anonymous"
-    async>
-  </script>
+    async></script>
 </div>
 
 <style>
@@ -38,4 +38,4 @@ const GISCUS_CATEGORY_ID = import.meta.env.GISCUS_CATEGORY_ID;
     font-size: 1.5rem;
     color: #333;
   }
-</style> 
+</style>

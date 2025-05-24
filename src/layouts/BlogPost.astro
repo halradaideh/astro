@@ -1,118 +1,258 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import Navigation from '../components/Navigation.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Navigation.astro';
+import Footer from '../components/Footer.astro';
 import Comments from '../components/Comments.astro';
+import FloatingStats from '../components/FloatingStats';
+import ThemeScript from '../components/ThemeScript.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const currentPath = Astro.url.pathname;
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>{title}</title>
-		<meta name="description" content={description} />
-	</head>
+  <head>
+    <BaseHead title={title} description={description} />
+    <ThemeScript />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
 
-	<body>
-		<Navigation />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							{new Date(pubDate).toLocaleDateString('en-us', {
-								year: 'numeric',
-								month: 'short',
-								day: 'numeric',
-							})}
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on {new Date(updatedDate).toLocaleDateString('en-us', {
-											year: 'numeric',
-											month: 'short',
-											day: 'numeric',
-										})}
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
-					<slot />
-					<Comments />
-				</div>
-			</article>
-		</main>
-	</body>
+  <body>
+    <Header />
+    <div class="page-content">
+      <main>
+        <article>
+          <div class="hero-image">
+            {heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
+          </div>
+          <div class="prose">
+            <div class="title">
+              <div class="date">
+                <time
+                  >{
+                    pubDate.toLocaleDateString('en-us', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  }</time
+                >
+                {
+                  updatedDate && (
+                    <div class="last-updated-on">
+                      Last updated on{' '}
+                      <time>
+                        {updatedDate.toLocaleDateString('en-us', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </time>
+                    </div>
+                  )
+                }
+              </div>
+              <h1>{title}</h1>
+              <hr />
+            </div>
+            <slot />
+            <Comments />
+          </div>
+        </article>
+      </main>
+      <FloatingStats path={currentPath} client:only="react" />
+      <Footer />
+    </div>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Open Sans',
+          'Helvetica Neue',
+          sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .page-content {
+        flex: 1;
+        background: var(--blog-container-bg);
+        width: 100%;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -4px 12px var(--shadow-color);
+        border-top: 1px solid var(--border-color);
+      }
+
+      main {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        flex: 1;
+      }
+
+      .hero-image {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto 3rem auto;
+        padding: 1.5rem;
+        background: var(--bg-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+      }
+
+      .hero-image img {
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: contain;
+        margin: 0 auto;
+        display: block;
+      }
+
+      .prose {
+        width: 720px;
+        max-width: calc(100% - 2em);
+        margin: auto;
+        padding: 1em;
+        color: var(--text-color);
+        font-size: 1.1rem;
+        line-height: 1.7;
+      }
+
+      .prose :global(h1),
+      .prose :global(h2),
+      .prose :global(h3),
+      .prose :global(h4),
+      .prose :global(h5),
+      .prose :global(h6) {
+        color: var(--heading-color);
+        margin: 1.5em 0 0.5em 0;
+      }
+
+      .prose :global(p) {
+        color: var(--text-color);
+        margin: 1.5em 0;
+      }
+
+      .prose :global(a) {
+        color: var(--accent-color);
+        text-decoration: none;
+      }
+
+      .prose :global(a:hover) {
+        text-decoration: underline;
+      }
+
+      .title {
+        margin-bottom: 2em;
+        padding: 1em 0;
+        text-align: center;
+        line-height: 1;
+      }
+
+      .title h1 {
+        margin: 0 0 0.5em 0;
+        font-size: 2.5rem;
+        color: var(--heading-color);
+      }
+
+      .date {
+        margin-bottom: 0.5em;
+        color: var(--text-muted);
+      }
+
+      .last-updated-on {
+        font-style: italic;
+        margin-top: 0.5em;
+        color: var(--text-muted);
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: 2rem 0;
+      }
+
+      .prose :global(pre) {
+        background-color: var(--code-bg);
+        padding: 1.5em;
+        border-radius: 8px;
+        margin: 1.5em 0;
+        overflow-x: auto;
+      }
+
+      .prose :global(code) {
+        background-color: var(--code-bg);
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+
+      .prose :global(img) {
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+        display: block;
+        margin: 2em auto;
+        border-radius: 8px;
+        background: var(--card-bg);
+        padding: 1rem;
+        box-shadow: 0 2px 8px var(--shadow-color);
+      }
+
+      .prose :global(blockquote) {
+        border-left: 4px solid var(--accent-color);
+        padding-left: 1.5em;
+        margin: 2em 0;
+        color: var(--text-color);
+        font-style: italic;
+      }
+
+      .prose :global(ul),
+      .prose :global(ol) {
+        color: var(--text-color);
+        margin: 1em 0;
+        padding-left: 2em;
+      }
+
+      .prose :global(li) {
+        margin: 0.5em 0;
+      }
+
+      @media (max-width: 720px) {
+        .prose {
+          font-size: 1rem;
+        }
+
+        .title h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </body>
 </html>
-
-<style>
-	body {
-		margin: 0;
-		font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-		background: #f5f5f5;
-		color: #333;
-	}
-
-	main {
-		width: 100%;
-		margin: 0;
-	}
-
-	.hero-image {
-		width: 100%;
-		max-height: 400px;
-		overflow: hidden;
-		margin-bottom: 2rem;
-	}
-
-	.hero-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.prose {
-		width: 720px;
-		max-width: calc(100% - 2em);
-		margin: auto;
-		padding: 1em;
-	}
-
-	.title {
-		margin-bottom: 2em;
-		padding: 1em 0;
-		text-align: center;
-		line-height: 1;
-	}
-
-	.title h1 {
-		margin: 0 0 0.5em 0;
-		font-size: 2.5rem;
-	}
-
-	.date {
-		margin-bottom: 0.5em;
-		color: #666;
-	}
-
-	.last-updated-on {
-		font-style: italic;
-		margin-top: 0.5em;
-		color: #666;
-	}
-
-	hr {
-		border: none;
-		border-top: 1px solid #eaeaea;
-		margin: 2rem 0;
-	}
-</style>

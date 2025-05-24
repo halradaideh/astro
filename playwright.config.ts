@@ -30,4 +30,4 @@ export default defineConfig({
     port: 4321,
     reuseExistingServer: !process.env.CI,
   },
-}); 
+});

@@ -3,6 +3,7 @@
 This directory needs the following dark tech-themed images:
 
 1. `ddos-shield.jpg` - A matrix-style DDoS protection visualization
+
    - Size: 1200x800px
    - Style: Dark cyberpunk with matrix code rain
    - Colors: Deep green matrix code on black background
@@ -10,6 +11,7 @@ This directory needs the following dark tech-themed images:
    - Theme: The Matrix meets cybersecurity
 
 2. `datacenter-automation.jpg` - A futuristic data center visualization
+
    - Size: 1200x800px
    - Style: Dark tech with neon accents
    - Colors: Deep blue/purple with electric blue highlights
@@ -17,6 +19,7 @@ This directory needs the following dark tech-themed images:
    - Theme: Cyberpunk data center
 
 3. `dns-security.jpg` - A matrix-style DNS security visualization
+
    - Size: 1200x800px
    - Style: Dark tech with matrix elements
    - Colors: Green matrix code on black background
@@ -32,6 +35,7 @@ This directory needs the following dark tech-themed images:
 Please use images that follow these specifications to maintain a consistent dark tech/cyberpunk theme across the blog.
 
 Image Requirements:
+
 - High resolution (minimum 1200x800px for blog posts)
 - Dark theme with tech/AI aesthetic
 - Consistent cyberpunk/matrix style across all images
@@ -40,8 +44,9 @@ Image Requirements:
 - Minimal use of white/gray, focus on dark backgrounds with neon accents
 
 Please replace these placeholder instructions with actual images. The images should be:
+
 - High resolution (minimum 1200x800px for blog posts)
 - Professional quality
 - Relevant to the content
 - Following a consistent cybersecurity theme
-- Free from copyright restrictions (either purchased with proper license or created) 
+- Free from copyright restrictions (either purchased with proper license or created)

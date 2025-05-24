@@ -1,0 +1,13 @@
+<script is:inline>
+  // Get theme preference as early as possible to prevent flash
+  const getInitialTheme = () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Apply theme immediately
+  document.documentElement.setAttribute('data-theme', getInitialTheme());
+</script>
