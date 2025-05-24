@@ -267,33 +267,30 @@ jobs:
           REPO_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r '.id')
 
-          # Create or get discussion category
-          CATEGORY="Comments"
-          CATEGORY_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussions" \
-            -H "Accept: application/vnd.github.discussions-preview+json" \
-            | jq -r '.[] | select(.category.name=="Comments") | .category.id')
+          # First check if the Comments category exists
+          CATEGORIES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussions/categories" \
+            -H "Accept: application/vnd.github.discussions-preview+json")
+
+          CATEGORY_ID=$(echo "$CATEGORIES" | jq -r '.[] | select(.name=="Comments") | .id')
 
           # If category doesn't exist, create it
           if [ -z "$CATEGORY_ID" ]; then
             CATEGORY_ID=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussions/categories" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussion_categories" \
               -H "Accept: application/vnd.github.discussions-preview+json" \
-              -d "{\"name\":\"Comments\",\"description\":\"Blog post comments\"}" \
+              -d '{"name":"Comments","description":"Blog post comments","emoji":":speech_balloon:"}' \
               | jq -r '.id')
           fi
 
           # Use envsubst to replace variables in the template
           export GISCUS_REPO="${REPO}"
           export GISCUS_REPO_ID="${REPO_ID}"
-          export GISCUS_CATEGORY="${CATEGORY}"
+          export GISCUS_CATEGORY="Comments"
           export GISCUS_CATEGORY_ID="${CATEGORY_ID}"
-          export KV_BLOG_STATS_ID="${{ secrets.KV_BLOG_STATS_ID }}"
-          export KV_BLOG_STATS_PREVIEW_ID="${{ secrets.KV_BLOG_STATS_PREVIEW_ID }}"
-          export KV_BLOG_VIEWS_ID="${{ secrets.KV_BLOG_VIEWS_ID }}"
-          export KV_BLOG_VIEWS_PREVIEW_ID="${{ secrets.KV_BLOG_VIEWS_PREVIEW_ID }}"
-          export KV_BLOG_REACTIONS_ID="${{ secrets.KV_BLOG_REACTIONS_ID }}"
-          export KV_BLOG_REACTIONS_PREVIEW_ID="${{ secrets.KV_BLOG_REACTIONS_PREVIEW_ID }}"
+          export KV_BLOG_STATS_ID="8a4cc18a92a34983911aeefd30a1fbf7"
+          export KV_BLOG_VIEWS_ID="1dae070e6434430eb664495afabd53e6"
+          export KV_BLOG_REACTIONS_ID="e17b552cb3ab47b3a5be5a870808bdbd"
 
           # Generate wrangler.toml from template
           envsubst < wrangler.template.toml > wrangler.toml
