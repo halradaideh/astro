@@ -28,9 +28,8 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   const [views, setViews] = useState<number>(0);
   const [likes, setLikes] = useState<LikeData>(defaultLikeData);
   const [isLiked, setIsLiked] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [showLikeDetails, setShowLikeDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,7 +41,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         }).catch(() => null);
 
         if (viewResponse?.ok) {
-          const data = await viewResponse.json();
+          const data = await viewResponse.json() as { total: number };
           setViews(data.total);
         }
 
@@ -50,14 +49,14 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         const likeResponse = await fetch(`/api/likes${path}`).catch(() => null);
 
         if (likeResponse?.ok) {
-          const data = await likeResponse.json();
+          const data = await likeResponse.json() as LikeData;
           setLikes(data);
 
           // Check if current user has liked
           const currentUser = await getCurrentUser();
           if (
             currentUser &&
-            data.users.some((user: { login: string }) => user.login === currentUser.login)
+            data.users.some((user) => user.login === currentUser.login)
           ) {
             setIsLiked(true);
           }
@@ -76,7 +75,8 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
     try {
       const response = await fetch('/api/auth/user');
       if (response.ok) {
-        return await response.json();
+        const data = await response.json() as { login: string };
+        return data;
       }
       return null;
     } catch {
@@ -90,7 +90,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         method: 'POST',
       });
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as LikeData;
         setLikes(data);
         setIsLiked(!isLiked);
       }

@@ -61,11 +61,11 @@ jobs:
           npm install -g npm@${{ env.NPM_VERSION }}
           npm install
 
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx,.astro --no-cache
+
       - name: Check formatting
         run: npm run format:check
-
-      - name: Run linting
-        run: npm run lint
 
       - name: Type check
         run: npm run typecheck

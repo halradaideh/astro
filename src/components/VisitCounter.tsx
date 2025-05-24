@@ -14,8 +14,10 @@ const VisitCounter: React.FC<VisitCounterProps> = ({ path }) => {
         const response = await fetch(`/api/visit-counter${path}`, {
           method: 'POST',
         });
-        const data = await response.json();
-        setCount(data.total);
+        if (response.ok) {
+          const data = await response.json() as { total: number };
+          setCount(data.total);
+        }
       } catch (error) {
         console.error('Error incrementing visit count:', error);
       }

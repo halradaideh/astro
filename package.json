@@ -33,6 +33,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250524.0",
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
