@@ -267,20 +267,38 @@ jobs:
           REPO_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r '.id')
 
-          # First check if the Comments category exists
-          CATEGORIES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussions/categories" \
+          echo "Repository ID: ${REPO_ID}"
+
+          # Debug: First get and inspect the categories response
+          CATEGORIES_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussion_categories" \
             -H "Accept: application/vnd.github.discussions-preview+json")
 
-          CATEGORY_ID=$(echo "$CATEGORIES" | jq -r '.[] | select(.name=="Comments") | .id')
+          echo "Categories Response:"
+          echo "$CATEGORIES_RESPONSE" | jq '.'
+
+          # Try to find the Comments category
+          CATEGORY_ID=$(echo "$CATEGORIES_RESPONSE" | jq -r '.[] | select(.name=="Comments") | .id // empty')
+          echo "Found Category ID: ${CATEGORY_ID}"
 
           # If category doesn't exist, create it
           if [ -z "$CATEGORY_ID" ]; then
-            CATEGORY_ID=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            echo "Creating new Comments category..."
+            CREATE_RESPONSE=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussion_categories" \
               -H "Accept: application/vnd.github.discussions-preview+json" \
-              -d '{"name":"Comments","description":"Blog post comments","emoji":":speech_balloon:"}' \
-              | jq -r '.id')
+              -d '{"name":"Comments","description":"Blog post comments","emoji":":speech_balloon:"}')
+            
+            echo "Create Category Response:"
+            echo "$CREATE_RESPONSE" | jq '.'
+            
+            CATEGORY_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id // empty')
+            echo "New Category ID: ${CATEGORY_ID}"
+          fi
+
+          if [ -z "$CATEGORY_ID" ]; then
+            echo "Failed to get or create category ID"
+            exit 1
           fi
 
           # Use envsubst to replace variables in the template
