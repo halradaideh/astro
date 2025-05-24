@@ -27,7 +27,7 @@ env:
 
   # Giscus Configuration
   GISCUS_REPO: 'halradaideh/astro'
-  GISCUS_REPO_ID: '989307835'
+  GISCUS_REPO_ID: 'R_kgDOOvejuw'
   GISCUS_CATEGORY: 'General'
   GISCUS_CATEGORY_ID: 'DIC_kwDOOveju84Cqi8P'
 
@@ -279,6 +279,21 @@ jobs:
             GISCUS_REPO_ID=${{ env.GISCUS_REPO_ID }}
             GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }}
             GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}
+          kv: |
+            BLOG_STATS
+            BLOG_VIEWS
+            BLOG_REACTIONS
+
+      - name: Create KV Namespaces
+        if: steps.pages-deploy.outcome == 'success'
+        run: |
+          for ns in BLOG_STATS BLOG_VIEWS BLOG_REACTIONS; do
+            echo "Creating KV namespace: $ns"
+            npx wrangler@${{ env.WRANGLER_VERSION }} kv:namespace create $ns || true
+          done
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Update Deployment Status
         if: always()
