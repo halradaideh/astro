@@ -1,7 +1,40 @@
-name = "blog-radaideh-info"
-compatibility_date = "2024-03-25"
+name = "blog-worker"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
 
-kv_namespaces = [
-  { binding = "VISIT_COUNTS", id = "YOUR_KV_ID" },
-  { binding = "LIKES", id = "YOUR_LIKES_KV_ID" }
-] 
+[env.production]
+name = "blog-worker-prod"
+vars = { ENVIRONMENT = "production" }
+
+# Security Configuration
+[env.production.vars]
+ALLOWED_ORIGINS = ["https://blog.radaideh.info"]
+RATE_LIMIT_REQUESTS = "60"  # requests per minute
+RATE_LIMIT_WINDOW = "60"    # window in seconds
+
+# Giscus Configuration
+[env.production.vars]
+GISCUS_REPO = "${GISCUS_REPO}"
+GISCUS_REPO_ID = "${GISCUS_REPO_ID}"
+GISCUS_CATEGORY = "${GISCUS_CATEGORY}"
+GISCUS_CATEGORY_ID = "${GISCUS_CATEGORY_ID}"
+
+# KV Namespace Bindings
+[[env.production.kv_namespaces]]
+binding = "BLOG_STATS"
+id = "8a4cc18a92a34983911aeefd30a1fbf7"
+
+[[env.production.kv_namespaces]]
+binding = "BLOG_VIEWS"
+id = "1dae070e6434430eb664495afabd53e6"
+
+[[env.production.kv_namespaces]]
+binding = "BLOG_REACTIONS"
+id = "e17b552cb3ab47b3a5be5a870808bdbd"
+
+# Analytics and Monitoring
+[env.production.analytics_engine]
+enabled = true
+
+[env.production.worker_monitoring]
+enabled = true 
