@@ -29,8 +29,7 @@ export const onRequest: PagesFunction<Env> = async (
     });
   }
 
-  // Get the blog post path from the URL
-  const url = new URL(request.url);
+  // Get the blog post path from the context params
   const path = `/blog/${context.params.path}`;
 
   // Get current count
