@@ -77,8 +77,48 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-  test-build:
+  test:
     needs: [quality-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install -g npm@${{ env.NPM_VERSION }}
+          npm install
+          npm ci --install-links
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Build site
+        run: npm run build
+
+      - name: Run Playwright tests
+        run: npm run test
+        env:
+          CI: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  test-build:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,6 +147,26 @@ jobs:
             echo "Build failed!"
             exit 1
           fi
+
+  security-scan:
+    needs: [quality-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
 
   prepare-release:
     needs: [test-build]
@@ -275,13 +335,13 @@ jobs:
           branch: main
           wranglerVersion: '${{ env.WRANGLER_VERSION }}'
           environmentVariables: |
-            GISCUS_REPO=${{ env.GISCUS_REPO }}
-            GISCUS_REPO_ID=${{ env.GISCUS_REPO_ID }}
-            GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }}
-            GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}
+            GISCUS_REPO=${{ secrets.GISCUS_REPO }}
+            GISCUS_REPO_ID=${{ secrets.GISCUS_REPO_ID }}
+            GISCUS_CATEGORY=${{ secrets.GISCUS_CATEGORY }}
+            GISCUS_CATEGORY_ID=${{ secrets.GISCUS_CATEGORY_ID }}
           kv: |
-            VISIT_COUNTS=edd1045d26324fd08b9b7fe9a3c327d7
-            LIKES=263cdf8509ca4b549cdb044a7351949b
+            VISIT_COUNTS=${{ secrets.KV_VISIT_COUNTS_ID }}
+            LIKES=${{ secrets.KV_LIKES_ID }}
 
       - name: Create KV Namespaces
         if: steps.pages-deploy.outcome == 'success'

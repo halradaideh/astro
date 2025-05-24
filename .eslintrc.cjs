@@ -24,6 +24,7 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'prettier',
   ],
+  ignorePatterns: ['dist/', 'node_modules/'],
   settings: {
     react: {
       version: 'detect',

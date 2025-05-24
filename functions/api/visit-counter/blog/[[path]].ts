@@ -1,21 +1,34 @@
 /// <reference types="@cloudflare/workers-types" />
 import type { Env, VisitCount } from '../../../types';
 
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://blog.radaideh.info',
+  'http://localhost:4321', // For development
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
 export const onRequest: PagesFunction<Env> = async (
   context: EventContext<Env, string, unknown>
 ) => {
   try {
     const { request, env } = context;
+    const origin = request.headers.get('origin');
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Max-Age': '86400',
-        },
+        headers: getCorsHeaders(origin),
       });
     }
 
@@ -25,7 +38,7 @@ export const onRequest: PagesFunction<Env> = async (
         status: 405,
         headers: {
           Allow: 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Origin': '*',
+          ...getCorsHeaders(origin),
         },
       });
     }
@@ -67,8 +80,7 @@ export const onRequest: PagesFunction<Env> = async (
     return new Response(JSON.stringify(newCount), {
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        ...getCorsHeaders(origin),
       },
     });
   } catch (error: unknown) {
@@ -78,7 +90,7 @@ export const onRequest: PagesFunction<Env> = async (
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...getCorsHeaders(null),
       },
     });
   }

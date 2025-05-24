@@ -11,8 +11,30 @@ type Props = CollectionEntry<'blog'>['data'];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+// Format dates safely
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return '';
+  const dateObj = date instanceof Date ? date : new Date(date);
+  return dateObj.toLocaleDateString('en-us', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const formatISODate = (date: Date | string | undefined) => {
+  if (!date) return '';
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return dateObj.toISOString();
+  } catch (e) {
+    return '';
+  }
+};
 ---
 
+<!doctype html>
 <html lang="en">
   <head>
     <BaseHead title={title} description={description} />
@@ -34,26 +56,12 @@ const currentPath = Astro.url.pathname;
           <div class="prose">
             <div class="title">
               <div class="date">
-                <time
-                  >{
-                    pubDate.toLocaleDateString('en-us', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  }</time
-                >
+                {pubDate && <time datetime={formatISODate(pubDate)}>{formatDate(pubDate)}</time>}
                 {
                   updatedDate && (
                     <div class="last-updated-on">
                       Last updated on{' '}
-                      <time>
-                        {updatedDate.toLocaleDateString('en-us', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </time>
+                      <time datetime={formatISODate(updatedDate)}>{formatDate(updatedDate)}</time>
                     </div>
                   )
                 }
@@ -198,46 +206,32 @@ const currentPath = Astro.url.pathname;
 
       .prose :global(pre) {
         background-color: var(--code-bg);
-        padding: 1.5em;
+        padding: 1em;
         border-radius: 8px;
-        margin: 1.5em 0;
         overflow-x: auto;
       }
 
       .prose :global(code) {
-        background-color: var(--code-bg);
-        padding: 0.2em 0.4em;
-        border-radius: 4px;
+        font-family: 'Fira Code', monospace;
         font-size: 0.9em;
       }
 
       .prose :global(img) {
         max-width: 100%;
-        width: auto;
         height: auto;
-        max-height: 500px;
-        object-fit: contain;
-        display: block;
-        margin: 2em auto;
-        border-radius: 8px;
-        background: var(--card-bg);
-        padding: 1rem;
-        box-shadow: 0 2px 8px var(--shadow-color);
       }
 
       .prose :global(blockquote) {
         border-left: 4px solid var(--accent-color);
-        padding-left: 1.5em;
-        margin: 2em 0;
-        color: var(--text-color);
-        font-style: italic;
+        margin: 0;
+        padding-left: 1em;
+        color: var(--text-muted);
       }
 
       .prose :global(ul),
       .prose :global(ol) {
-        color: var(--text-color);
         margin: 1em 0;
-        padding-left: 2em;
+        padding-left: 1.5em;
       }
 
       .prose :global(li) {

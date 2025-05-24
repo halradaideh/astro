@@ -49,21 +49,40 @@ This blog is built with modern technologies:
      - `BLOG_VIEWS` - For tracking page views
      - `BLOG_REACTIONS` - For storing user reactions
 
-2. **Environment Variables**
+2. **GitHub Secrets Configuration**
+
+   Configure the following secrets in your GitHub repository settings:
 
    ```bash
-   # Cloudflare
-   CLOUDFLARE_ACCOUNT_ID=your_account_id
-   CLOUDFLARE_API_TOKEN=your_api_token
+   # Cloudflare Configuration
+   CF_API_TOKEN=your_cloudflare_api_token
+   CF_ACCOUNT_ID=your_cloudflare_account_id
 
-   # Giscus (GitHub Discussions)
+   # Giscus Configuration (GitHub Discussions)
+   GISCUS_REPO=your_repo_name
+   GISCUS_REPO_ID=your_repo_id
+   GISCUS_CATEGORY=your_category_name
+   GISCUS_CATEGORY_ID=your_category_id
+
+   # KV Namespace IDs
+   KV_VISIT_COUNTS_ID=your_visit_counts_kv_id
+   KV_LIKES_ID=your_likes_kv_id
+   ```
+
+3. **Environment Variables (Local Development)**
+
+   ```bash
+   # Copy env.example to .env.local
+   cp env.example .env.local
+
+   # Edit .env.local with your values
    GISCUS_REPO=your_repo
    GISCUS_REPO_ID=your_repo_id
    GISCUS_CATEGORY=your_category
    GISCUS_CATEGORY_ID=your_category_id
    ```
 
-3. **KV Namespace Bindings**
+4. **KV Namespace Bindings**
    ```bash
    # Bind KV namespaces to your worker
    wrangler kv:namespace create BLOG_STATS
@@ -83,9 +102,32 @@ npm run dev
 # Build for production
 npm run build
 
-# Deploy to Cloudflare Workers
-npm run deploy
+# Run tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Format code
+npm run format
 ```
+
+### CI/CD Pipeline
+
+The project includes a comprehensive CI/CD pipeline with:
+
+- **Quality Checks**: ESLint, Prettier, TypeScript validation
+- **Testing**: Playwright E2E tests
+- **Security Scanning**: Trivy vulnerability scanner
+- **Build Verification**: Automated build testing
+- **Deployment**: Automated deployment to Cloudflare Pages
+- **Release Management**: Semantic versioning and GitHub releases
 
 ### Cloudflare Worker Setup
 
