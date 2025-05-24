@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-bvzihdzo> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Automated Proxmox Deployment with PXE and Preseed</title><meta name="description" content="Learn how to set up automated Proxmox deployments using PXE boot and Preseed configurations for efficient infrastructure management"><style>.nav-container[data-astro-cid-pux6a34n]{background-color:#fff;border-bottom:1px solid #eaeaea;padding:1rem 0;position:sticky;top:0;z-index:100}.nav-content[data-astro-cid-pux6a34n]{max-width:1100px;margin:0 auto;padding:0 1rem;display:flex;justify-content:space-between;align-items:center}.nav-title[data-astro-cid-pux6a34n] a[data-astro-cid-pux6a34n]{font-size:1.5rem;font-weight:700;color:#000;text-decoration:none}.nav-links[data-astro-cid-pux6a34n]{display:flex;gap:2rem}.nav-link[data-astro-cid-pux6a34n]{color:#666;text-decoration:none;transition:color .2s ease}.nav-link[data-astro-cid-pux6a34n]:hover{color:#000}@media (max-width: 768px){.nav-content[data-astro-cid-pux6a34n]{flex-direction:column;gap:1rem}.nav-links[data-astro-cid-pux6a34n]{gap:1rem}}
+.comments-container[data-astro-cid-jvxsf75u]{margin-top:4rem;padding-top:2rem;border-top:1px solid #eaeaea}.comments-container[data-astro-cid-jvxsf75u] h2[data-astro-cid-jvxsf75u]{margin-bottom:2rem;font-size:1.5rem;color:#333}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;background:#f5f5f5;color:#333}main[data-astro-cid-bvzihdzo]{width:100%;margin:0}.hero-image[data-astro-cid-bvzihdzo]{width:100%;max-height:400px;overflow:hidden;margin-bottom:2rem}.hero-image[data-astro-cid-bvzihdzo] img[data-astro-cid-bvzihdzo]{width:100%;height:100%;object-fit:cover}.prose[data-astro-cid-bvzihdzo]{width:720px;max-width:calc(100% - 2em);margin:auto;padding:1em}.title[data-astro-cid-bvzihdzo]{margin-bottom:2em;padding:1em 0;text-align:center;line-height:1}.title[data-astro-cid-bvzihdzo] h1[data-astro-cid-bvzihdzo]{margin:0 0 .5em;font-size:2.5rem}.date[data-astro-cid-bvzihdzo]{margin-bottom:.5em;color:#666}.last-updated-on[data-astro-cid-bvzihdzo]{font-style:italic;margin-top:.5em;color:#666}hr[data-astro-cid-bvzihdzo]{border:none;border-top:1px solid #eaeaea;margin:2rem 0}
+</style></head> <body data-astro-cid-bvzihdzo> <nav class="nav-container" data-astro-cid-pux6a34n> <div class="nav-content" data-astro-cid-pux6a34n> <div class="nav-title" data-astro-cid-pux6a34n> <a href="/" data-astro-cid-pux6a34n>Tech Blog</a> </div> <div class="nav-links" data-astro-cid-pux6a34n> <a href="/" class="nav-link" data-astro-cid-pux6a34n>Home</a> <a href="/blog" class="nav-link" data-astro-cid-pux6a34n>Blog</a> <a href="/about" class="nav-link" data-astro-cid-pux6a34n>About</a> </div> </div> </nav>  <main data-astro-cid-bvzihdzo> <article data-astro-cid-bvzihdzo> <div class="hero-image" data-astro-cid-bvzihdzo> <img width="1020" height="510" src="/blog-placeholder-5.jpg" alt="" data-astro-cid-bvzihdzo> </div> <div class="prose" data-astro-cid-bvzihdzo> <div class="title" data-astro-cid-bvzihdzo> <div class="date" data-astro-cid-bvzihdzo> Mar 22, 2024  </div> <h1 data-astro-cid-bvzihdzo>Automated Proxmox Deployment with PXE and Preseed</h1> <hr data-astro-cid-bvzihdzo> </div>  <h1 id="automated-proxmox-deployment-with-pxe-and-preseed">Automated Proxmox Deployment with PXE and Preseed</h1>
+<p>Setting up a new Proxmox server typically involves manual installation steps. However, by combining PXE boot with Preseed configurations, we can automate the entire deployment process. This guide walks through setting up an automated Proxmox deployment system.</p>
+<h2 id="understanding-the-components">Understanding the Components</h2>
+<h3 id="1-pxe-preboot-execution-environment">1. PXE (Preboot Execution Environment)</h3>
+<ul>
+<li>Network booting protocol</li>
+<li>Allows computers to boot from network</li>
+<li>Requires DHCP and TFTP servers</li>
+</ul>
+<h3 id="2-preseed">2. Preseed</h3>
+<ul>
+<li>Debian’s automated installation method</li>
+<li>Provides answers to installation questions</li>
+<li>Supports custom scripts and configurations</li>
+</ul>
+<h3 id="3-proxmox-ve">3. Proxmox VE</h3>
+<ul>
+<li>Open-source virtualization platform</li>
+<li>Based on Debian</li>
+<li>Supports KVM and containers</li>
+</ul>
+<h2 id="setting-up-the-infrastructure">Setting Up the Infrastructure</h2>
+<h3 id="1-dhcp-server-configuration">1. DHCP Server Configuration</h3>
+<p>Using ISC DHCP Server:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span># /etc/dhcp/dhcpd.conf</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>allow booting;</span></span>
+<span class="line"><span>allow bootp;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>subnet 192.168.1.0 netmask 255.255.255.0 {</span></span>
+<span class="line"><span>    range 192.168.1.100 192.168.1.200;</span></span>
+<span class="line"><span>    option routers 192.168.1.1;</span></span>
+<span class="line"><span>    option domain-name-servers 8.8.8.8, 8.8.4.4;</span></span>
+<span class="line"><span>    </span></span>
+<span class="line"><span>    # PXE boot configuration</span></span>
+<span class="line"><span>    filename &quot;pxelinux.0&quot;;</span></span>
+<span class="line"><span>    next-server 192.168.1.10; # TFTP server IP</span></span>
+<span class="line"><span>}</span></span></code></pre>
+<h3 id="2-tftp-server-setup">2. TFTP Server Setup</h3>
+<p>Install and configure TFTP server:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Install TFTP server</span></span>
+<span class="line"><span style="color:#B392F0">apt-get</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> tftpd-hpa</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Configure TFTP</span></span>
+<span class="line"><span style="color:#B392F0">cat</span><span style="color:#F97583"> &gt;</span><span style="color:#9ECBFF"> /etc/default/tftpd-hpa</span><span style="color:#F97583"> &lt;&lt;</span><span style="color:#9ECBFF"> EOF</span></span>
+<span class="line"><span style="color:#9ECBFF">TFTP_USERNAME=&quot;tftp&quot;</span></span>
+<span class="line"><span style="color:#9ECBFF">TFTP_DIRECTORY=&quot;/srv/tftp&quot;</span></span>
+<span class="line"><span style="color:#9ECBFF">TFTP_ADDRESS=&quot;0.0.0.0:69&quot;</span></span>
+<span class="line"><span style="color:#9ECBFF">TFTP_OPTIONS=&quot;--secure&quot;</span></span>
+<span class="line"><span style="color:#9ECBFF">EOF</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Create required directories</span></span>
+<span class="line"><span style="color:#B392F0">mkdir</span><span style="color:#79B8FF"> -p</span><span style="color:#9ECBFF"> /srv/tftp/pxelinux.cfg</span></span></code></pre>
+<h3 id="3-pxe-boot-files">3. PXE Boot Files</h3>
+<p>Download and configure PXE boot files:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Download required files</span></span>
+<span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> /srv/tftp</span></span>
+<span class="line"><span style="color:#B392F0">wget</span><span style="color:#9ECBFF"> http://ftp.debian.org/debian/dists/bullseye/main/installer-amd64/current/images/netboot/netboot.tar.gz</span></span>
+<span class="line"><span style="color:#B392F0">tar</span><span style="color:#9ECBFF"> xzf</span><span style="color:#9ECBFF"> netboot.tar.gz</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Configure PXE menu</span></span>
+<span class="line"><span style="color:#B392F0">cat</span><span style="color:#F97583"> &gt;</span><span style="color:#9ECBFF"> pxelinux.cfg/default</span><span style="color:#F97583"> &lt;&lt;</span><span style="color:#9ECBFF"> EOF</span></span>
+<span class="line"><span style="color:#9ECBFF">DEFAULT proxmox</span></span>
+<span class="line"><span style="color:#9ECBFF">TIMEOUT 100</span></span>
+<span class="line"><span style="color:#9ECBFF">PROMPT 0</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">LABEL proxmox</span></span>
+<span class="line"><span style="color:#9ECBFF">    KERNEL debian-installer/amd64/linux</span></span>
+<span class="line"><span style="color:#9ECBFF">    APPEND initrd=debian-installer/amd64/initrd.gz auto=true priority=critical preseed/url=http://192.168.1.10/proxmox-preseed.cfg</span></span>
+<span class="line"><span style="color:#9ECBFF">EOF</span></span></code></pre>
+<h2 id="preseed-configuration">Preseed Configuration</h2>
+<p>Create a comprehensive Preseed configuration for Proxmox:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6A737D"># /var/www/html/proxmox-preseed.cfg</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Localization</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i debian-installer/locale string en_US</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i keyboard-configuration/xkb-keymap select us</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Network configuration</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i netcfg/choose_interface select auto</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i netcfg/get_hostname string proxmox</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i netcfg/get_domain string local</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Mirror settings</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i mirror/country string manual</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i mirror/http/hostname string ftp.debian.org</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i mirror/http/directory string /debian</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i mirror/http/proxy string</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Account setup</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i passwd/root-password password your_secure_password</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i passwd/root-password-again password your_secure_password</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i passwd/make-user boolean false</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Partitioning</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman-auto/method string regular</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman-auto/choose_recipe select atomic</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman-partitioning/confirm_write_new_label boolean true</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman/choose_partition select finish</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman/confirm boolean true</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i partman/confirm_nooverwrite boolean true</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Package selection</span></span>
+<span class="line"><span style="color:#E1E4E8">tasksel tasksel/first multiselect standard</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i pkgsel/include string openssh-server python3 sudo</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Proxmox repository setup</span></span>
+<span class="line"><span style="color:#E1E4E8">d-i preseed/late_command string \</span></span>
+<span class="line"><span style="color:#E1E4E8">    in-target wget -O- </span><span style="color:#9ECBFF">&quot;http://enterprise.proxmox.com/debian/proxmox-release-bullseye.gpg&quot;</span><span style="color:#E1E4E8"> | in-target apt-key add -</span><span style="color:#6A737D">; \</span></span>
+<span class="line"><span style="color:#E1E4E8">    echo </span><span style="color:#9ECBFF">&quot;deb http://enterprise.proxmox.com/debian/pve bullseye pve-enterprise&quot;</span><span style="color:#E1E4E8"> | in-target tee /etc/apt/sources.list.d/pve-enterprise.list</span><span style="color:#6A737D">; \</span></span>
+<span class="line"><span style="color:#E1E4E8">    in-target apt-get update</span><span style="color:#6A737D">; \</span></span>
+<span class="line"><span style="color:#E1E4E8">    in-target apt-get -y install proxmox-ve</span></span></code></pre>
+<h2 id="automation-scripts">Automation Scripts</h2>
+<h3 id="1-node-preparation-script">1. Node Preparation Script</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D">#!/usr/bin/env python3</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> subprocess</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> argparse</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> prepare_node</span><span style="color:#E1E4E8">(hostname, ip_address, gateway):</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Prepare a new Proxmox node for clustering&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    commands </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">&quot;pvecm create </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">hostname</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;systemctl restart pve-cluster&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">&quot;ip addr add </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">ip_address</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">/24 dev vmbr0&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">&quot;ip route add default via </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">gateway</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;systemctl restart networking&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    ]</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> cmd </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> commands:</span></span>
+<span class="line"><span style="color:#E1E4E8">        subprocess.run(cmd, </span><span style="color:#FFAB70">shell</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">check</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> configure_storage</span><span style="color:#E1E4E8">(storage_type, storage_path):</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Configure storage for the Proxmox node&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> storage_type </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> &quot;ceph&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        setup_ceph()</span></span>
+<span class="line"><span style="color:#F97583">    elif</span><span style="color:#E1E4E8"> storage_type </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> &quot;nfs&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        setup_nfs(storage_path)</span></span>
+<span class="line"><span style="color:#F97583">    elif</span><span style="color:#E1E4E8"> storage_type </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> &quot;zfs&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        setup_zfs(storage_path)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> setup_ceph</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Setup Ceph storage&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    commands </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;pveceph install&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;pveceph init --network 192.168.1.0/24&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;pveceph createmon&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    ]</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> cmd </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> commands:</span></span>
+<span class="line"><span style="color:#E1E4E8">        subprocess.run(cmd, </span><span style="color:#FFAB70">shell</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">check</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> setup_nfs</span><span style="color:#E1E4E8">(storage_path):</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Setup NFS storage&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    subprocess.run(</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">&quot;pvesm add nfs shared --path </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">storage_path</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> --server 192.168.1.100 --export /mnt/nfs&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        shell</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        check</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> setup_zfs</span><span style="color:#E1E4E8">(storage_path):</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Setup ZFS storage&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    commands </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">&quot;zpool create tank </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">storage_path</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;pvesm add zfspool tank --pool tank&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    ]</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> cmd </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> commands:</span></span>
+<span class="line"><span style="color:#E1E4E8">        subprocess.run(cmd, </span><span style="color:#FFAB70">shell</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">check</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#79B8FF"> __name__</span><span style="color:#F97583"> ==</span><span style="color:#9ECBFF"> &quot;__main__&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> argparse.ArgumentParser()</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser.add_argument(</span><span style="color:#9ECBFF">&quot;--hostname&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">required</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser.add_argument(</span><span style="color:#9ECBFF">&quot;--ip&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">required</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser.add_argument(</span><span style="color:#9ECBFF">&quot;--gateway&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">required</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser.add_argument(</span><span style="color:#9ECBFF">&quot;--storage-type&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">choices</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[</span><span style="color:#9ECBFF">&quot;ceph&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;nfs&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;zfs&quot;</span><span style="color:#E1E4E8">])</span></span>
+<span class="line"><span style="color:#E1E4E8">    parser.add_argument(</span><span style="color:#9ECBFF">&quot;--storage-path&quot;</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    args </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> parser.parse_args()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    prepare_node(args.hostname, args.ip, args.gateway)</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> args.storage_type:</span></span>
+<span class="line"><span style="color:#E1E4E8">        configure_storage(args.storage_type, args.storage_path)</span></span></code></pre>
+<h3 id="2-post-installation-configuration">2. Post-Installation Configuration</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D">#!/bin/bash</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Configure Proxmox repositories</span></span>
+<span class="line"><span style="color:#B392F0">cat</span><span style="color:#F97583"> &gt;</span><span style="color:#9ECBFF"> /etc/apt/sources.list.d/pve-enterprise.list</span><span style="color:#F97583"> &lt;&lt;</span><span style="color:#9ECBFF"> EOF</span></span>
+<span class="line"><span style="color:#9ECBFF">deb https://enterprise.proxmox.com/debian/pve bullseye pve-enterprise</span></span>
+<span class="line"><span style="color:#9ECBFF">EOF</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Update system</span></span>
+<span class="line"><span style="color:#B392F0">apt-get</span><span style="color:#9ECBFF"> update</span><span style="color:#E1E4E8"> &amp;&amp; </span><span style="color:#B392F0">apt-get</span><span style="color:#79B8FF"> -y</span><span style="color:#9ECBFF"> dist-upgrade</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Configure network bridge</span></span>
+<span class="line"><span style="color:#B392F0">cat</span><span style="color:#F97583"> &gt;</span><span style="color:#9ECBFF"> /etc/network/interfaces</span><span style="color:#F97583"> &lt;&lt;</span><span style="color:#9ECBFF"> EOF</span></span>
+<span class="line"><span style="color:#9ECBFF">auto lo</span></span>
+<span class="line"><span style="color:#9ECBFF">iface lo inet loopback</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">auto vmbr0</span></span>
+<span class="line"><span style="color:#9ECBFF">iface vmbr0 inet static</span></span>
+<span class="line"><span style="color:#9ECBFF">    address 192.168.1.10/24</span></span>
+<span class="line"><span style="color:#9ECBFF">    gateway 192.168.1.1</span></span>
+<span class="line"><span style="color:#9ECBFF">    bridge-ports eth0</span></span>
+<span class="line"><span style="color:#9ECBFF">    bridge-stp off</span></span>
+<span class="line"><span style="color:#9ECBFF">    bridge-fd 0</span></span>
+<span class="line"><span style="color:#9ECBFF">EOF</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Restart networking</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> restart</span><span style="color:#9ECBFF"> networking</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Enable IOMMU for PCI passthrough</span></span>
+<span class="line"><span style="color:#B392F0">sed</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> &#39;s/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet&quot;/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet intel_iommu=on&quot;/&#39;</span><span style="color:#9ECBFF"> /etc/default/grub</span></span>
+<span class="line"><span style="color:#B392F0">update-grub</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Configure storage</span></span>
+<span class="line"><span style="color:#B392F0">pvesm</span><span style="color:#9ECBFF"> add</span><span style="color:#9ECBFF"> dir</span><span style="color:#9ECBFF"> local-lvm</span><span style="color:#79B8FF"> --path</span><span style="color:#9ECBFF"> /var/lib/vz</span></span>
+<span class="line"><span style="color:#B392F0">pvesm</span><span style="color:#9ECBFF"> set</span><span style="color:#9ECBFF"> local-lvm</span><span style="color:#79B8FF"> --content</span><span style="color:#9ECBFF"> images,rootdir</span></span></code></pre>
+<h2 id="monitoring-and-maintenance">Monitoring and Maintenance</h2>
+<h3 id="1-health-check-script">1. Health Check Script</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D">#!/usr/bin/env python3</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> subprocess</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> json</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> smtplib</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> email.message </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> EmailMessage</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> check_node_health</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Check various health metrics of the Proxmox node&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    checks </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;cpu_usage&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;pvestatd cpu&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;memory_usage&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;pvestatd memory&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;storage_usage&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;pvesm status&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;service_status&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;systemctl status pve-cluster&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    results </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> check, command </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> checks.items():</span></span>
+<span class="line"><span style="color:#F97583">        try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">            output </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> subprocess.check_output(command.split())</span></span>
+<span class="line"><span style="color:#E1E4E8">            results[check] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span><span style="color:#9ECBFF">&quot;status&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;ok&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;output&quot;</span><span style="color:#E1E4E8">: output.decode()}</span></span>
+<span class="line"><span style="color:#F97583">        except</span><span style="color:#E1E4E8"> subprocess.CalledProcessError </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> e:</span></span>
+<span class="line"><span style="color:#E1E4E8">            results[check] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span><span style="color:#9ECBFF">&quot;status&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;error&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;output&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">(e)}</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> results</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> send_alert</span><span style="color:#E1E4E8">(subject, body):</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;&quot;&quot;Send email alert for health issues&quot;&quot;&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    msg </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> EmailMessage()</span></span>
+<span class="line"><span style="color:#E1E4E8">    msg.set_content(body)</span></span>
+<span class="line"><span style="color:#E1E4E8">    msg[</span><span style="color:#9ECBFF">&#39;Subject&#39;</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> subject</span></span>
+<span class="line"><span style="color:#E1E4E8">    msg[</span><span style="color:#9ECBFF">&#39;From&#39;</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> &quot;monitoring@example.com&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    msg[</span><span style="color:#9ECBFF">&#39;To&#39;</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> &quot;admin@example.com&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    with</span><span style="color:#E1E4E8"> smtplib.SMTP(</span><span style="color:#9ECBFF">&#39;smtp.example.com&#39;</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">587</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> server:</span></span>
+<span class="line"><span style="color:#E1E4E8">        server.starttls()</span></span>
+<span class="line"><span style="color:#E1E4E8">        server.login(</span><span style="color:#9ECBFF">&quot;user&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;password&quot;</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        server.send_message(msg)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    health_status </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> check_node_health()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Check for issues</span></span>
+<span class="line"><span style="color:#E1E4E8">    issues </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> check, result </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> health_status.items():</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> result[</span><span style="color:#9ECBFF">&quot;status&quot;</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> &quot;error&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">            issues.append(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">&quot;</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">check</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">: </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">result[</span><span style="color:#9ECBFF">&#39;output&#39;</span><span style="color:#E1E4E8">]</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Send alert if issues found</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> issues:</span></span>
+<span class="line"><span style="color:#E1E4E8">        send_alert(</span></span>
+<span class="line"><span style="color:#9ECBFF">            &quot;Proxmox Node Health Alert&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">            &quot;The following issues were detected:</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">&quot;</span><span style="color:#F97583"> +</span><span style="color:#9ECBFF"> &quot;</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">.join(issues)</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#79B8FF"> __name__</span><span style="color:#F97583"> ==</span><span style="color:#9ECBFF"> &quot;__main__&quot;</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    main()</span></span></code></pre>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues-and-solutions">Common Issues and Solutions</h3>
+<ol>
+<li>
+<p><strong>PXE Boot Fails</strong></p>
+<ul>
+<li>Check DHCP server configuration</li>
+<li>Verify TFTP server is accessible</li>
+<li>Ensure boot files are present</li>
+</ul>
+</li>
+<li>
+<p><strong>Preseed Configuration Issues</strong></p>
+<ul>
+<li>Validate preseed syntax</li>
+<li>Check network connectivity</li>
+<li>Review installation logs</li>
+</ul>
+</li>
+<li>
+<p><strong>Proxmox Installation Problems</strong></p>
+<ul>
+<li>Verify hardware compatibility</li>
+<li>Check system requirements</li>
+<li>Review repository access</li>
+</ul>
+</li>
+</ol>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li>
+<p><strong>Security</strong></p>
+<ul>
+<li>Use strong passwords</li>
+<li>Implement network segmentation</li>
+<li>Regular security updates</li>
+</ul>
+</li>
+<li>
+<p><strong>Backup</strong></p>
+<ul>
+<li>Regular configuration backups</li>
+<li>Test restore procedures</li>
+<li>Document recovery process</li>
+</ul>
+</li>
+<li>
+<p><strong>Maintenance</strong></p>
+<ul>
+<li>Regular health checks</li>
+<li>Performance monitoring</li>
+<li>Update management</li>
+</ul>
+</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>Automating Proxmox deployment with PXE and Preseed significantly reduces setup time and ensures consistent configurations across nodes. Regular maintenance and monitoring ensure reliable operation.</p>
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+<li><a href="https://pve.proxmox.com/wiki/Main_Page">Proxmox Documentation</a></li>
+<li><a href="https://www.debian.org/releases/stable/amd64/apb.en.html">Debian Preseed Guide</a></li>
+<li><a href="https://wiki.syslinux.org/wiki/index.php?title=PXELINUX">PXE Boot Documentation</a></li>
+</ul>  <div class="comments-container" data-astro-cid-jvxsf75u> <h2 data-astro-cid-jvxsf75u>Comments</h2> <script src="https://giscus.app/client.js" data-category="Announcements" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" data-loading="lazy" crossorigin="anonymous" async>
+  </script> </div>  </div> </article> </main> </body></html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-bvzihdzo> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DDoS Protection with Cloudflare: From Basic to Advanced</title><meta name="description" content="A comprehensive guide to implementing DDoS protection using Cloudflare, including WAF rules, rate limiting, and best practices"><style>.nav-container[data-astro-cid-pux6a34n]{background-color:#fff;border-bottom:1px solid #eaeaea;padding:1rem 0;position:sticky;top:0;z-index:100}.nav-content[data-astro-cid-pux6a34n]{max-width:1100px;margin:0 auto;padding:0 1rem;display:flex;justify-content:space-between;align-items:center}.nav-title[data-astro-cid-pux6a34n] a[data-astro-cid-pux6a34n]{font-size:1.5rem;font-weight:700;color:#000;text-decoration:none}.nav-links[data-astro-cid-pux6a34n]{display:flex;gap:2rem}.nav-link[data-astro-cid-pux6a34n]{color:#666;text-decoration:none;transition:color .2s ease}.nav-link[data-astro-cid-pux6a34n]:hover{color:#000}@media (max-width: 768px){.nav-content[data-astro-cid-pux6a34n]{flex-direction:column;gap:1rem}.nav-links[data-astro-cid-pux6a34n]{gap:1rem}}
+.comments-container[data-astro-cid-jvxsf75u]{margin-top:4rem;padding-top:2rem;border-top:1px solid #eaeaea}.comments-container[data-astro-cid-jvxsf75u] h2[data-astro-cid-jvxsf75u]{margin-bottom:2rem;font-size:1.5rem;color:#333}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;background:#f5f5f5;color:#333}main[data-astro-cid-bvzihdzo]{width:100%;margin:0}.hero-image[data-astro-cid-bvzihdzo]{width:100%;max-height:400px;overflow:hidden;margin-bottom:2rem}.hero-image[data-astro-cid-bvzihdzo] img[data-astro-cid-bvzihdzo]{width:100%;height:100%;object-fit:cover}.prose[data-astro-cid-bvzihdzo]{width:720px;max-width:calc(100% - 2em);margin:auto;padding:1em}.title[data-astro-cid-bvzihdzo]{margin-bottom:2em;padding:1em 0;text-align:center;line-height:1}.title[data-astro-cid-bvzihdzo] h1[data-astro-cid-bvzihdzo]{margin:0 0 .5em;font-size:2.5rem}.date[data-astro-cid-bvzihdzo]{margin-bottom:.5em;color:#666}.last-updated-on[data-astro-cid-bvzihdzo]{font-style:italic;margin-top:.5em;color:#666}hr[data-astro-cid-bvzihdzo]{border:none;border-top:1px solid #eaeaea;margin:2rem 0}
+</style></head> <body data-astro-cid-bvzihdzo> <nav class="nav-container" data-astro-cid-pux6a34n> <div class="nav-content" data-astro-cid-pux6a34n> <div class="nav-title" data-astro-cid-pux6a34n> <a href="/" data-astro-cid-pux6a34n>Tech Blog</a> </div> <div class="nav-links" data-astro-cid-pux6a34n> <a href="/" class="nav-link" data-astro-cid-pux6a34n>Home</a> <a href="/blog" class="nav-link" data-astro-cid-pux6a34n>Blog</a> <a href="/about" class="nav-link" data-astro-cid-pux6a34n>About</a> </div> </div> </nav>  <main data-astro-cid-bvzihdzo> <article data-astro-cid-bvzihdzo> <div class="hero-image" data-astro-cid-bvzihdzo> <img width="1020" height="510" src="/blog-placeholder-4.jpg" alt="" data-astro-cid-bvzihdzo> </div> <div class="prose" data-astro-cid-bvzihdzo> <div class="title" data-astro-cid-bvzihdzo> <div class="date" data-astro-cid-bvzihdzo> Mar 21, 2024  </div> <h1 data-astro-cid-bvzihdzo>DDoS Protection with Cloudflare: From Basic to Advanced</h1> <hr data-astro-cid-bvzihdzo> </div>  <h1 id="ddos-protection-with-cloudflare-from-basic-to-advanced">DDoS Protection with Cloudflare: From Basic to Advanced</h1>
+<p>Distributed Denial of Service (DDoS) attacks remain one of the most significant threats to online services. This guide explores how to leverage Cloudflare’s comprehensive suite of tools to protect your infrastructure from DDoS attacks.</p>
+<h2 id="understanding-ddos-attacks">Understanding DDoS Attacks</h2>
+<h3 id="types-of-ddos-attacks">Types of DDoS Attacks</h3>
+<ol>
+<li>
+<p><strong>Volumetric Attacks</strong></p>
+<ul>
+<li>UDP floods</li>
+<li>ICMP floods</li>
+<li>DNS amplification</li>
+</ul>
+</li>
+<li>
+<p><strong>Protocol Attacks</strong></p>
+<ul>
+<li>SYN floods</li>
+<li>Ping of Death</li>
+<li>Smurf attacks</li>
+</ul>
+</li>
+<li>
+<p><strong>Application Layer Attacks</strong></p>
+<ul>
+<li>HTTP floods</li>
+<li>Slow POST/GET</li>
+<li>Zero-day exploits</li>
+</ul>
+</li>
+</ol>
+<h2 id="cloudflares-ddos-protection-layers">Cloudflare’s DDoS Protection Layers</h2>
+<h3 id="1-network-layer-protection">1. Network Layer Protection</h3>
+<p>Cloudflare’s network layer protection operates at layers 3/4 of the OSI model:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6A737D"># Example Cloudflare Network Rules</span></span>
+<span class="line"><span style="color:#6A737D"># /etc/cloudflare/network-rules.conf</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Block specific IP ranges</span></span>
+<span class="line"><span style="color:#E1E4E8">IP_RANGE_RULE {</span></span>
+<span class="line"><span style="color:#E1E4E8">    action: block</span></span>
+<span class="line"><span style="color:#E1E4E8">    ip_range: 192.0.2.0/24</span></span>
+<span class="line"><span style="color:#E1E4E8">    description: </span><span style="color:#9ECBFF">&quot;Known malicious range&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Rate limiting for UDP traffic</span></span>
+<span class="line"><span style="color:#E1E4E8">UDP_RULE {</span></span>
+<span class="line"><span style="color:#E1E4E8">    action: rate_limit</span></span>
+<span class="line"><span style="color:#E1E4E8">    threshold: 1000/minute</span></span>
+<span class="line"><span style="color:#E1E4E8">    mitigation: challenge</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="2-application-layer-protection">2. Application Layer Protection</h3>
+<h4 id="waf-rules">WAF Rules</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Example WAF rule for rate limiting</span></span>
+<span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">  &quot;rules&quot;</span><span style="color:#E1E4E8">: [{</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;description&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;Rate limit API endpoints&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;filter&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;expression&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;http.request.uri.path contains </span><span style="color:#79B8FF">\&quot;</span><span style="color:#9ECBFF">/api/</span><span style="color:#79B8FF">\&quot;</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;products&quot;</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&quot;zone&quot;</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;action&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;rate_limit&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;rateLimit&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;period&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;requests&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">100</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }]</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h4 id="custom-rules">Custom Rules</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Block suspicious User-Agents</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> (http.user_agent contains </span><span style="color:#9ECBFF">&quot;suspicious-bot&quot;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#B392F0">    block</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Challenge excessive requests</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> (http.requests_per_minute </span><span style="color:#F97583">&gt;</span><span style="color:#79B8FF"> 1000</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#B392F0">    challenge</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h2 id="implementation-guide">Implementation Guide</h2>
+<h3 id="1-basic-setup">1. Basic Setup</h3>
+<ol>
+<li>
+<p><strong>DNS Configuration</strong>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Point your domain to Cloudflare</span></span>
+<span class="line"><span style="color:#E1E4E8">DOMAIN</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">&quot;example.com&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">TYPE</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">&quot;A&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">CONTENT</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">&quot;203.0.113.1&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">PROXY</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">true</span></span></code></pre>
+</li>
+<li>
+<p><strong>SSL/TLS Settings</strong>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">ssl_mode</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">full</span></span>
+<span class="line"><span style="color:#85E89D">min_tls_version</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1.2</span></span>
+<span class="line"><span style="color:#85E89D">opportunistic_encryption</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">on</span></span>
+<span class="line"><span style="color:#85E89D">tls_1_3</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">on</span></span></code></pre>
+</li>
+</ol>
+<h3 id="2-advanced-configuration">2. Advanced Configuration</h3>
+<h4 id="rate-limiting-rules">Rate Limiting Rules</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Rate limiting configuration</span></span>
+<span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">  &quot;rules&quot;</span><span style="color:#E1E4E8">: [</span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;threshold&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;period&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;match&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;request&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">          &quot;methods&quot;</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&quot;POST&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;PUT&quot;</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">          &quot;schemes&quot;</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&quot;HTTP&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;HTTPS&quot;</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">          &quot;url_pattern&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/api/*&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#E1E4E8">      },</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;mitigation_timeout&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">600</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h4 id="bot-management">Bot Management</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Bot detection and mitigation</span></span>
+<span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">  &quot;bot_management&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;detection_mode&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;traditional&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;challenge_ttl&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">3600</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;session_score_threshold&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">30</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;challenge_automation&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="1-traffic-analysis">1. Traffic Analysis</h3>
+<p>Monitor and analyze traffic patterns:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> requests</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> analyze_traffic</span><span style="color:#E1E4E8">(zone_id, api_token):</span></span>
+<span class="line"><span style="color:#E1E4E8">    url </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">&quot;https://api.cloudflare.com/client/v4/zones/</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">zone_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">/analytics/dashboard&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    headers </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;Authorization&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#F97583">f</span><span style="color:#9ECBFF">&quot;Bearer </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">api_token</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;Content-Type&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;application/json&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    response </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> requests.get(url, </span><span style="color:#FFAB70">headers</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">headers)</span></span>
+<span class="line"><span style="color:#E1E4E8">    data </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> response.json()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Analyze traffic patterns</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;total_requests&quot;</span><span style="color:#E1E4E8">: data[</span><span style="color:#9ECBFF">&quot;result&quot;</span><span style="color:#E1E4E8">][</span><span style="color:#9ECBFF">&quot;totals&quot;</span><span style="color:#E1E4E8">][</span><span style="color:#9ECBFF">&quot;requests&quot;</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;blocked_requests&quot;</span><span style="color:#E1E4E8">: data[</span><span style="color:#9ECBFF">&quot;result&quot;</span><span style="color:#E1E4E8">][</span><span style="color:#9ECBFF">&quot;totals&quot;</span><span style="color:#E1E4E8">][</span><span style="color:#9ECBFF">&quot;threats&quot;</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;traffic_pattern&quot;</span><span style="color:#E1E4E8">: data[</span><span style="color:#9ECBFF">&quot;result&quot;</span><span style="color:#E1E4E8">][</span><span style="color:#9ECBFF">&quot;timeseries&quot;</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span></code></pre>
+<h3 id="2-security-headers">2. Security Headers</h3>
+<p>Implement security headers:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="nginx"><code><span class="line"><span style="color:#6A737D"># Nginx configuration with security headers</span></span>
+<span class="line"><span style="color:#F97583">add_header </span><span style="color:#E1E4E8">Strict-Transport-Security </span><span style="color:#9ECBFF">&quot;max-age=31536000; includeSubDomains&quot;</span><span style="color:#E1E4E8"> always;</span></span>
+<span class="line"><span style="color:#F97583">add_header </span><span style="color:#E1E4E8">X-Frame-Options </span><span style="color:#9ECBFF">&quot;SAMEORIGIN&quot;</span><span style="color:#E1E4E8"> always;</span></span>
+<span class="line"><span style="color:#F97583">add_header </span><span style="color:#E1E4E8">X-Content-Type-Options </span><span style="color:#9ECBFF">&quot;nosniff&quot;</span><span style="color:#E1E4E8"> always;</span></span>
+<span class="line"><span style="color:#F97583">add_header </span><span style="color:#E1E4E8">X-XSS-Protection </span><span style="color:#9ECBFF">&quot;1; mode=block&quot;</span><span style="color:#E1E4E8"> always;</span></span></code></pre>
+<h3 id="3-origin-protection">3. Origin Protection</h3>
+<p>Secure your origin server:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Only allow Cloudflare IPs</span></span>
+<span class="line"><span style="color:#F97583">for</span><span style="color:#E1E4E8"> ip </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> $(</span><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> https://www.cloudflare.com/ips-v4</span><span style="color:#E1E4E8">); </span><span style="color:#F97583">do</span></span>
+<span class="line"><span style="color:#B392F0">    ufw</span><span style="color:#9ECBFF"> allow</span><span style="color:#9ECBFF"> from</span><span style="color:#E1E4E8"> $ip </span><span style="color:#9ECBFF">to</span><span style="color:#9ECBFF"> any</span><span style="color:#9ECBFF"> port</span><span style="color:#79B8FF"> 443</span><span style="color:#9ECBFF"> proto</span><span style="color:#9ECBFF"> tcp</span></span>
+<span class="line"><span style="color:#F97583">done</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">for</span><span style="color:#E1E4E8"> ip </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> $(</span><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> https://www.cloudflare.com/ips-v6</span><span style="color:#E1E4E8">); </span><span style="color:#F97583">do</span></span>
+<span class="line"><span style="color:#B392F0">    ufw</span><span style="color:#9ECBFF"> allow</span><span style="color:#9ECBFF"> from</span><span style="color:#E1E4E8"> $ip </span><span style="color:#9ECBFF">to</span><span style="color:#9ECBFF"> any</span><span style="color:#9ECBFF"> port</span><span style="color:#79B8FF"> 443</span><span style="color:#9ECBFF"> proto</span><span style="color:#9ECBFF"> tcp</span></span>
+<span class="line"><span style="color:#F97583">done</span></span></code></pre>
+<h2 id="monitoring-and-response">Monitoring and Response</h2>
+<h3 id="1-alert-configuration">1. Alert Configuration</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Alert configuration</span></span>
+<span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">  &quot;alerts&quot;</span><span style="color:#E1E4E8">: [</span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;type&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;ddos_attack_l7&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;threshold&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5000</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;notification&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;email&quot;</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&quot;security@example.com&quot;</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">        &quot;webhook&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;https://example.com/security-webhook&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">      }</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="2-incident-response-plan">2. Incident Response Plan</h3>
+<ol>
+<li>
+<p><strong>Detection Phase</strong>:</p>
+<ul>
+<li>Monitor Cloudflare dashboard</li>
+<li>Set up alerts</li>
+<li>Track traffic patterns</li>
+</ul>
+</li>
+<li>
+<p><strong>Analysis Phase</strong>:</p>
+<ul>
+<li>Identify attack type</li>
+<li>Assess impact</li>
+<li>Review logs</li>
+</ul>
+</li>
+<li>
+<p><strong>Mitigation Phase</strong>:</p>
+<ul>
+<li>Adjust WAF rules</li>
+<li>Enable additional protections</li>
+<li>Scale resources if needed</li>
+</ul>
+</li>
+<li>
+<p><strong>Recovery Phase</strong>:</p>
+<ul>
+<li>Restore services</li>
+<li>Document incident</li>
+<li>Update protection measures</li>
+</ul>
+</li>
+</ol>
+<h2 id="advanced-topics">Advanced Topics</h2>
+<h3 id="1-api-protection">1. API Protection</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// API-specific protection rules</span></span>
+<span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">  &quot;api_shield&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;auth_type&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;bearer&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;rate_limit&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;requests_per_second&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">      &quot;burst_size&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">20</span></span>
+<span class="line"><span style="color:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#9ECBFF">    &quot;schema_validation&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="2-load-balancing">2. Load Balancing</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># Load balancing configuration</span></span>
+<span class="line"><span style="color:#85E89D">load_balancers</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;production&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    default_pools</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&quot;primary&quot;</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">&quot;secondary&quot;</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">    fallback_pool</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;backup&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    session_affinity</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;cookie&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    steering_policy</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;dynamic_latency&quot;</span></span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>A robust DDoS protection strategy using Cloudflare requires:</p>
+<ul>
+<li>Proper configuration at multiple layers</li>
+<li>Regular monitoring and updates</li>
+<li>Incident response readiness</li>
+<li>Continuous improvement based on attack patterns</li>
+</ul>
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+<li><a href="https://developers.cloudflare.com/">Cloudflare Documentation</a></li>
+<li><a href="https://www.cloudflare.com/ddos-report/">DDoS Attack Trends</a></li>
+<li><a href="https://www.cloudflare.com/security-best-practices/">Security Best Practices</a></li>
+</ul>  <div class="comments-container" data-astro-cid-jvxsf75u> <h2 data-astro-cid-jvxsf75u>Comments</h2> <script src="https://giscus.app/client.js" data-category="Announcements" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" data-loading="lazy" crossorigin="anonymous" async>
+  </script> </div>  </div> </article> </main> </body></html>
