@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "Running pre-commit hook: npm run format"
+
+# Store the current staged files
+staged_files=$(git diff --cached --name-only)
+
+# Run npm format
+npm run format
+
+# If npm format failed, abort the commit
+if [ $? -ne 0 ]; then
+    echo "❌ npm run format failed. Please fix the formatting issues and try committing again."
+    exit 1
+fi
+
+# Add the formatted files back to staging
+if [ -n "$staged_files" ]; then
+    echo "Adding formatted files back to staging..."
+    echo "$staged_files" | tr '\n' '\0' | xargs -0 git add
+fi
+
+echo "✅ Pre-commit hook completed successfully"
+exit 0 

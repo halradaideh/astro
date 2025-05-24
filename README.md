@@ -170,6 +170,100 @@ This blog's design and structure were created with the assistance of Claude AI, 
 
 MIT License - Feel free to use this code for your own blog!
 
+## 🔄 Recent Updates
+
+- Fixed Giscus comment system integration issues and improved theme synchronization
+- Resolved Cloudflare KV 500 errors with enhanced error handling and logging
+- Migrated to Cloudflare Pages for improved deployment workflow
+- Added comprehensive rate limiting and security features
+- Implemented version tagging for better release management
+- Enhanced error handling for KV operations
+- Added GitHub authentication for reactions system
+
+## 🛡️ Security Features
+
+- Rate limiting on API endpoints
+- GitHub-based authentication for reactions
+- CORS protection
+- Input validation and sanitization
+- Secure session handling
+- Error logging and monitoring
+
+## 🚀 Deployment
+
+### Cloudflare Pages Setup
+
+1. **Initial Setup**
+
+   ```bash
+   # Build and deploy
+   npm run build
+   npm run deploy
+   ```
+
+2. **Required Environment Variables**
+
+   ```bash
+   # Cloudflare Configuration
+   CLOUDFLARE_ACCOUNT_ID=your_account_id
+   CLOUDFLARE_API_TOKEN=your_api_token
+
+   # Giscus Configuration
+   GISCUS_REPO=your_repo
+   GISCUS_REPO_ID=your_repo_id
+   GISCUS_CATEGORY=your_category
+   GISCUS_CATEGORY_ID=your_category_id
+   ```
+
+3. **KV Namespace Configuration**
+
+   - Configure the following KV namespaces in Cloudflare Pages:
+     ```bash
+     VISIT_COUNTS=your_kv_id
+     LIKES=your_kv_id
+     ```
+   - Bind namespaces in wrangler.toml:
+
+     ```toml
+     [[kv_namespaces]]
+     binding = "VISIT_COUNTS"
+     id = "your_kv_id"
+
+     [[kv_namespaces]]
+     binding = "LIKES"
+     id = "your_kv_id"
+     ```
+
+### Monitoring and Analytics
+
+- Cloudflare Analytics enabled for traffic monitoring
+- Worker monitoring for performance tracking
+- Error logging and alerting configured
+- Rate limit monitoring
+
+### Troubleshooting
+
+Common issues and solutions:
+
+1. **KV 500 Errors**
+
+   - Verify KV namespace bindings
+   - Check access permissions
+   - Monitor Cloudflare Workers logs
+   - Ensure proper error handling
+
+2. **Giscus Integration**
+
+   - Verify GitHub repository permissions
+   - Check theme synchronization
+   - Validate environment variables
+
+3. **Deployment Issues**
+   - Clear Cloudflare cache
+   - Check build logs
+   - Verify environment variables
+   - Monitor Pages deployment status
+
 ---
 
 <div align="center">
