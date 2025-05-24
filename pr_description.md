@@ -1,47 +1,25 @@
-# Integrate Deployment into CI Workflow
+# Cloudflare Pages Deployment Integration
 
-## Changes Made
+## Changes
+1. Updated CI workflow to use Cloudflare Pages for deployment
+2. Added Cloudflare-specific configuration and secrets
+3. Removed redundant deployment workflow
+4. Added VS Code settings to .gitignore
 
-### Workflow Integration
-1. Moved deployment steps into main CI workflow:
-   - Added `deploy` job that runs after release creation
-   - Maintains deployment environment and concurrency controls
-   - Uses release ID to update release notes with deployment status
-
-2. Enhanced Release Creation:
-   - Switched to GitHub API for release creation
-   - Added release ID output for deployment job
-   - Ensures proper release creation before deployment
-
-3. Fixed Event Handling:
-   - Updated all event references to use `pull_request_target`
-   - Added proper conditions for deployment triggers
-   - Maintained security with proper ref handling
-
-### Permission Updates
-- Added `deployments: write` permission
-- Maintained existing permissions for content and PR management
-- Ensured proper access for release updates
-
-## Impact
-- Ensures deployment runs immediately after release
-- Eliminates dependency on release webhook
-- Maintains atomic release and deployment process
-- Provides better visibility of deployment status
-
-## Type of Change
-- [x] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+## Required Secrets
+- `CLOUDFLARE_API_TOKEN`: API token from Cloudflare with Pages deployment permissions
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
 
 ## Testing
-- Verified release creation process
-- Tested deployment trigger conditions
-- Confirmed release note updates
-- Validated environment handling
+- [ ] CI workflow runs successfully
+- [ ] Build completes without errors
+- [ ] Site deploys to Cloudflare Pages
+- [ ] Release creation works as expected
 
-## Additional Notes
-This update addresses the issue where deployments were being skipped by integrating the deployment process directly into the CI workflow, ensuring it runs immediately after release creation without depending on GitHub's webhook system.
+## Notes
+- The site will be deployed to `blog-radaideh-info.pages.dev`
+- Automatic deployments will happen on merges to main
+- Preview deployments will be available for PRs
 
 ---
 _This PR was prepared with the assistance of an AI agent (Claude) to ensure best practices and comprehensive documentation._ 
