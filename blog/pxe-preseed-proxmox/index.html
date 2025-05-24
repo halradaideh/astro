@@ -1,7 +1,32 @@
-<!DOCTYPE html><html lang="en" data-astro-cid-bvzihdzo> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Automated Proxmox Deployment with PXE and Preseed</title><meta name="description" content="Learn how to set up automated Proxmox deployments using PXE boot and Preseed configurations for efficient infrastructure management"><style>.nav-container[data-astro-cid-pux6a34n]{background-color:#fff;border-bottom:1px solid #eaeaea;padding:1rem 0;position:sticky;top:0;z-index:100}.nav-content[data-astro-cid-pux6a34n]{max-width:1100px;margin:0 auto;padding:0 1rem;display:flex;justify-content:space-between;align-items:center}.nav-title[data-astro-cid-pux6a34n] a[data-astro-cid-pux6a34n]{font-size:1.5rem;font-weight:700;color:#000;text-decoration:none}.nav-links[data-astro-cid-pux6a34n]{display:flex;gap:2rem}.nav-link[data-astro-cid-pux6a34n]{color:#666;text-decoration:none;transition:color .2s ease}.nav-link[data-astro-cid-pux6a34n]:hover{color:#000}@media (max-width: 768px){.nav-content[data-astro-cid-pux6a34n]{flex-direction:column;gap:1rem}.nav-links[data-astro-cid-pux6a34n]{gap:1rem}}
+<!DOCTYPE html><html lang="en" data-astro-cid-bvzihdzo> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Automated Proxmox Deployment with PXE and Preseed</title><meta name="description" content="Learn how to set up automated Proxmox deployments using PXE boot and Preseed configurations for efficient infrastructure management in a cyberpunk-inspired data center"><style>.nav-container[data-astro-cid-pux6a34n]{background-color:#fff;border-bottom:1px solid #eaeaea;padding:1rem 0;position:sticky;top:0;z-index:100}.nav-content[data-astro-cid-pux6a34n]{max-width:1100px;margin:0 auto;padding:0 1rem;display:flex;justify-content:space-between;align-items:center}.nav-title[data-astro-cid-pux6a34n] a[data-astro-cid-pux6a34n]{font-size:1.5rem;font-weight:700;color:#000;text-decoration:none}.nav-links[data-astro-cid-pux6a34n]{display:flex;gap:2rem}.nav-link[data-astro-cid-pux6a34n]{color:#666;text-decoration:none;transition:color .2s ease}.nav-link[data-astro-cid-pux6a34n]:hover{color:#000}@media (max-width: 768px){.nav-content[data-astro-cid-pux6a34n]{flex-direction:column;gap:1rem}.nav-links[data-astro-cid-pux6a34n]{gap:1rem}}
 .comments-container[data-astro-cid-jvxsf75u]{margin-top:4rem;padding-top:2rem;border-top:1px solid #eaeaea}.comments-container[data-astro-cid-jvxsf75u] h2[data-astro-cid-jvxsf75u]{margin-bottom:2rem;font-size:1.5rem;color:#333}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;background:#f5f5f5;color:#333}main[data-astro-cid-bvzihdzo]{width:100%;margin:0}.hero-image[data-astro-cid-bvzihdzo]{width:100%;max-height:400px;overflow:hidden;margin-bottom:2rem}.hero-image[data-astro-cid-bvzihdzo] img[data-astro-cid-bvzihdzo]{width:100%;height:100%;object-fit:cover}.prose[data-astro-cid-bvzihdzo]{width:720px;max-width:calc(100% - 2em);margin:auto;padding:1em}.title[data-astro-cid-bvzihdzo]{margin-bottom:2em;padding:1em 0;text-align:center;line-height:1}.title[data-astro-cid-bvzihdzo] h1[data-astro-cid-bvzihdzo]{margin:0 0 .5em;font-size:2.5rem}.date[data-astro-cid-bvzihdzo]{margin-bottom:.5em;color:#666}.last-updated-on[data-astro-cid-bvzihdzo]{font-style:italic;margin-top:.5em;color:#666}hr[data-astro-cid-bvzihdzo]{border:none;border-top:1px solid #eaeaea;margin:2rem 0}
-</style></head> <body data-astro-cid-bvzihdzo> <nav class="nav-container" data-astro-cid-pux6a34n> <div class="nav-content" data-astro-cid-pux6a34n> <div class="nav-title" data-astro-cid-pux6a34n> <a href="/" data-astro-cid-pux6a34n>Tech Blog</a> </div> <div class="nav-links" data-astro-cid-pux6a34n> <a href="/" class="nav-link" data-astro-cid-pux6a34n>Home</a> <a href="/blog" class="nav-link" data-astro-cid-pux6a34n>Blog</a> <a href="/about" class="nav-link" data-astro-cid-pux6a34n>About</a> </div> </div> </nav>  <main data-astro-cid-bvzihdzo> <article data-astro-cid-bvzihdzo> <div class="hero-image" data-astro-cid-bvzihdzo> <img width="1020" height="510" src="/blog-placeholder-5.jpg" alt="" data-astro-cid-bvzihdzo> </div> <div class="prose" data-astro-cid-bvzihdzo> <div class="title" data-astro-cid-bvzihdzo> <div class="date" data-astro-cid-bvzihdzo> Mar 22, 2024  </div> <h1 data-astro-cid-bvzihdzo>Automated Proxmox Deployment with PXE and Preseed</h1> <hr data-astro-cid-bvzihdzo> </div>  <h1 id="automated-proxmox-deployment-with-pxe-and-preseed">Automated Proxmox Deployment with PXE and Preseed</h1>
-<p>Setting up a new Proxmox server typically involves manual installation steps. However, by combining PXE boot with Preseed configurations, we can automate the entire deployment process. This guide walks through setting up an automated Proxmox deployment system.</p>
+</style></head> <body data-astro-cid-bvzihdzo> <nav class="nav-container" data-astro-cid-pux6a34n> <div class="nav-content" data-astro-cid-pux6a34n> <div class="nav-title" data-astro-cid-pux6a34n> <a href="/" data-astro-cid-pux6a34n>Tech Blog</a> </div> <div class="nav-links" data-astro-cid-pux6a34n> <a href="/" class="nav-link" data-astro-cid-pux6a34n>Home</a> <a href="/blog" class="nav-link" data-astro-cid-pux6a34n>Blog</a> <a href="/about" class="nav-link" data-astro-cid-pux6a34n>About</a> </div> </div> </nav>  <main data-astro-cid-bvzihdzo> <article data-astro-cid-bvzihdzo> <div class="hero-image" data-astro-cid-bvzihdzo> <img width="1020" height="510" src="/blog/datacenter-automation.jpg" alt="" data-astro-cid-bvzihdzo> </div> <div class="prose" data-astro-cid-bvzihdzo> <div class="title" data-astro-cid-bvzihdzo> <div class="date" data-astro-cid-bvzihdzo> Mar 22, 2024  </div> <h1 data-astro-cid-bvzihdzo>Automated Proxmox Deployment with PXE and Preseed</h1> <hr data-astro-cid-bvzihdzo> </div>  <h1 id="automated-proxmox-deployment">Automated Proxmox Deployment</h1>
+<p>In the neon-lit world of modern data centers, automation is key to maintaining efficient operations. This guide walks you through setting up PXE boot and Preseed configurations for automated Proxmox deployments, bringing a touch of cyberpunk to your infrastructure management.</p>
+<h2 id="understanding-pxe-boot">Understanding PXE Boot</h2>
+<p>PXE (Preboot Execution Environment) allows computers to boot from the network, enabling automated OS installations. We’ll configure a PXE server to serve Proxmox installation files across your digital domain.</p>
+<h2 id="setting-up-dhcp-and-tftp">Setting up DHCP and TFTP</h2>
+<ol>
+<li>Configure DHCP server with PXE options</li>
+<li>Set up TFTP server for boot files</li>
+<li>Prepare network boot menu</li>
+<li>Test network boot setup</li>
+</ol>
+<h2 id="preseed-configuration">Preseed Configuration</h2>
+<p>Create a Preseed file to automate the installation:</p>
+<ul>
+<li>Disk partitioning</li>
+<li>Network configuration</li>
+<li>Package selection</li>
+<li>Post-installation tasks</li>
+</ul>
+<h2 id="best-practices">Best Practices</h2>
+<p>Follow these guidelines for reliable automation:</p>
+<ol>
+<li>Version control your configurations</li>
+<li>Test in isolated environments</li>
+<li>Document your setup</li>
+<li>Monitor deployment logs</li>
+</ol>
 <h2 id="understanding-the-components">Understanding the Components</h2>
 <h3 id="1-pxe-preboot-execution-environment">1. PXE (Preboot Execution Environment)</h3>
 <ul>
@@ -70,7 +95,7 @@
 <span class="line"><span style="color:#9ECBFF">    KERNEL debian-installer/amd64/linux</span></span>
 <span class="line"><span style="color:#9ECBFF">    APPEND initrd=debian-installer/amd64/initrd.gz auto=true priority=critical preseed/url=http://192.168.1.10/proxmox-preseed.cfg</span></span>
 <span class="line"><span style="color:#9ECBFF">EOF</span></span></code></pre>
-<h2 id="preseed-configuration">Preseed Configuration</h2>
+<h2 id="preseed-configuration-1">Preseed Configuration</h2>
 <p>Create a comprehensive Preseed configuration for Proxmox:</p>
 <pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6A737D"># /var/www/html/proxmox-preseed.cfg</span></span>
 <span class="line"></span>
@@ -309,7 +334,7 @@
 </ul>
 </li>
 </ol>
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices-1">Best Practices</h2>
 <ol>
 <li>
 <p><strong>Security</strong></p>
