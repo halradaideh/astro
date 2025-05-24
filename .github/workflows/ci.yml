@@ -280,14 +280,13 @@ jobs:
             GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }}
             GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}
           kv: |
-            BLOG_STATS
-            BLOG_VIEWS
-            BLOG_REACTIONS
+            VISIT_COUNTS=edd1045d26324fd08b9b7fe9a3c327d7
+            LIKES=263cdf8509ca4b549cdb044a7351949b
 
       - name: Create KV Namespaces
         if: steps.pages-deploy.outcome == 'success'
         run: |
-          for ns in BLOG_STATS BLOG_VIEWS BLOG_REACTIONS; do
+          for ns in VISIT_COUNTS LIKES; do
             echo "Creating KV namespace: $ns"
             npx wrangler@${{ env.WRANGLER_VERSION }} kv:namespace create $ns || true
           done

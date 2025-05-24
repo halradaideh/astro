@@ -8,6 +8,29 @@ export const onRequest: PagesFunction<Env> = async (
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
+  // Only allow GET and POST methods
+  if (!['GET', 'POST'].includes(request.method)) {
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: {
+        Allow: 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+
   // Get current count
   const currentCount = ((await env.VISIT_COUNTS.get(path, 'json')) as VisitCount) || { total: 0 };
   const newCount = { total: currentCount.total + 1 };
@@ -19,6 +42,7 @@ export const onRequest: PagesFunction<Env> = async (
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     },
   });
 };
