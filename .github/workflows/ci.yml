@@ -118,19 +118,45 @@ jobs:
             const newVersion = '${{ steps.versioning.outputs.new_version }}';
             const tagName = `v${newVersion}`;
             
-            // Create the release
-            const release = await github.rest.repos.createRelease({
-              owner,
-              repo,
-              tag_name: tagName,
-              name: `Release ${tagName}`,
-              body: 'Automated release',
-              draft: false,
-              prerelease: false,
-              generate_release_notes: true
-            });
-            
-            core.setOutput('release_id', release.data.id);
+            try {
+              // Try to get existing release
+              const existingRelease = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag: tagName
+              });
+              
+              // If release exists, update it
+              const release = await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: existingRelease.data.id,
+                name: `Release ${tagName}`,
+                body: 'Automated release update',
+                draft: false,
+                prerelease: false
+              });
+              
+              core.setOutput('release_id', release.data.id);
+            } catch (error) {
+              if (error.status === 404) {
+                // Release doesn't exist, create new one
+                const release = await github.rest.repos.createRelease({
+                  owner,
+                  repo,
+                  tag_name: tagName,
+                  name: `Release ${tagName}`,
+                  body: 'Automated release',
+                  draft: false,
+                  prerelease: false,
+                  generate_release_notes: true
+                });
+                
+                core.setOutput('release_id', release.data.id);
+              } else {
+                throw error;
+              }
+            }
 
   deploy:
     needs: [prepare-release]
