@@ -10,6 +10,7 @@
     "url": "https://github.com/halradaideh/tech-blog.git"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
