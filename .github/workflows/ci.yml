@@ -267,20 +267,19 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: |
-            # Create KV namespaces if they don't exist
-            KV_STATS=$(wrangler kv:namespace list | grep ${{ env.KV_STATS_NAME }} || echo "")
-            if [ -z "$KV_STATS" ]; then
-              wrangler kv:namespace create ${{ env.KV_STATS_NAME }}
+            # Check and create KV_STATS namespace
+            if ! wrangler kv:namespace list | grep -q "${{ env.KV_STATS_NAME }}"; then
+              wrangler kv:namespace create "${{ env.KV_STATS_NAME }}"
             fi
-
-            KV_VIEWS=$(wrangler kv:namespace list | grep ${{ env.KV_VIEWS_NAME }} || echo "")
-            if [ -z "$KV_VIEWS" ]; then
-              wrangler kv:namespace create ${{ env.KV_VIEWS_NAME }}
+            
+            # Check and create KV_VIEWS namespace
+            if ! wrangler kv:namespace list | grep -q "${{ env.KV_VIEWS_NAME }}"; then
+              wrangler kv:namespace create "${{ env.KV_VIEWS_NAME }}"
             fi
-
-            KV_REACTIONS=$(wrangler kv:namespace list | grep ${{ env.KV_REACTIONS_NAME }} || echo "")
-            if [ -z "$KV_REACTIONS" ]; then
-              wrangler kv:namespace create ${{ env.KV_REACTIONS_NAME }}
+            
+            # Check and create KV_REACTIONS namespace
+            if ! wrangler kv:namespace list | grep -q "${{ env.KV_REACTIONS_NAME }}"; then
+              wrangler kv:namespace create "${{ env.KV_REACTIONS_NAME }}"
             fi
 
       - name: Configure Worker
