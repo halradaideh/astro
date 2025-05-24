@@ -41,6 +41,7 @@ This blog is built with modern technologies:
 ### Prerequisites
 
 1. **Cloudflare Account Setup**
+
    - Create a Cloudflare account
    - Set up a Cloudflare Worker
    - Create the following KV namespaces:
@@ -49,11 +50,12 @@ This blog is built with modern technologies:
      - `BLOG_REACTIONS` - For storing user reactions
 
 2. **Environment Variables**
+
    ```bash
    # Cloudflare
    CLOUDFLARE_ACCOUNT_ID=your_account_id
    CLOUDFLARE_API_TOKEN=your_api_token
-   
+
    # Giscus (GitHub Discussions)
    GISCUS_REPO=your_repo
    GISCUS_REPO_ID=your_repo_id
@@ -88,11 +90,13 @@ npm run deploy
 ### Cloudflare Worker Setup
 
 1. **Initialize Wrangler**
+
    ```bash
    npx wrangler init
    ```
 
 2. **Configure wrangler.toml**
+
    ```toml
    name = "blog-worker"
    main = "src/worker.ts"
@@ -114,6 +118,7 @@ npm run deploy
 ## 🤖 AI Assistant
 
 This blog's design and structure were created with the assistance of Claude AI, Anthropic's advanced language model. The AI helped in:
+
 - Designing the modern, responsive layout
 - Implementing cybersecurity-themed components
 - Optimizing the site structure

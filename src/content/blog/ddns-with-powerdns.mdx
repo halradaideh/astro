@@ -1,9 +1,9 @@
 ---
-title: "Dynamic DNS with PowerDNS: A Complete Guide"
-description: "Learn how to set up a robust Dynamic DNS solution using PowerDNS in a matrix-inspired network environment, including API integration and automatic updates"
-pubDate: "2024-03-20"
-heroImage: "/blog/dns-security.jpg"
-tags: ["dns", "powerdns", "ddns", "infrastructure", "networking", "matrix"]
+title: 'Dynamic DNS with PowerDNS: A Complete Guide'
+description: 'Learn how to set up a robust Dynamic DNS solution using PowerDNS in a matrix-inspired network environment, including API integration and automatic updates'
+pubDate: '2024-03-20'
+heroImage: '/blog/dns-security.jpg'
+tags: ['dns', 'powerdns', 'ddns', 'infrastructure', 'networking', 'matrix']
 ---
 
 # Dynamic DNS with PowerDNS
@@ -46,6 +46,7 @@ Follow these guidelines for optimal operation:
 ## What is Dynamic DNS?
 
 Dynamic DNS allows automatic updates to DNS records when IP addresses change. This is particularly useful for:
+
 - Home labs with dynamic IP addresses
 - Cloud environments with auto-scaling
 - Distributed systems requiring frequent DNS updates
@@ -53,6 +54,7 @@ Dynamic DNS allows automatic updates to DNS records when IP addresses change. Th
 ## Why PowerDNS?
 
 PowerDNS offers several advantages for DDNS:
+
 - REST API for easy integration
 - Support for various backends (MySQL, PostgreSQL, SQLite)
 - High performance and scalability
@@ -61,6 +63,7 @@ PowerDNS offers several advantages for DDNS:
 ## Prerequisites
 
 Before we begin, ensure you have:
+
 - A Linux server (we'll use Ubuntu 22.04)
 - Root or sudo access
 - Basic understanding of DNS concepts
@@ -69,12 +72,14 @@ Before we begin, ensure you have:
 ## Setting Up PowerDNS
 
 1. Install PowerDNS and MySQL:
+
 ```bash
 sudo apt update
 sudo apt install pdns-server pdns-backend-mysql mysql-server
 ```
 
 2. Create PowerDNS database:
+
 ```sql
 CREATE DATABASE powerdns;
 CREATE USER 'pdns'@'localhost' IDENTIFIED BY 'your_secure_password';
@@ -83,6 +88,7 @@ FLUSH PRIVILEGES;
 ```
 
 3. Configure PowerDNS:
+
 ```ini
 # /etc/powerdns/pdns.conf
 api=yes
@@ -114,12 +120,12 @@ def update_dns_record(zone, name, record_type, content, ttl=300):
         "X-API-Key": "your_api_key",
         "Content-Type": "application/json"
     }
-    
+
     # Get zone ID
     zone_url = f"{api_url}/zones/{zone}."
     response = requests.get(zone_url, headers=headers)
     zone_data = response.json()
-    
+
     # Update record
     payload = {
         "rrsets": [{
@@ -133,13 +139,13 @@ def update_dns_record(zone, name, record_type, content, ttl=300):
             }]
         }]
     }
-    
+
     response = requests.patch(
         zone_url,
         headers=headers,
         data=json.dumps(payload)
     )
-    
+
     return response.status_code == 200
 
 # Example usage
@@ -174,11 +180,13 @@ WantedBy=multi-user.target
 ## Monitoring and Maintenance
 
 1. **Logging**:
+
    - Enable PowerDNS query logging
    - Monitor API access logs
    - Track update failures
 
 2. **Performance Monitoring**:
+
    - Watch database performance
    - Monitor DNS query latency
    - Track resource usage
@@ -193,11 +201,13 @@ WantedBy=multi-user.target
 Common issues and solutions:
 
 1. **API Connection Failed**:
+
    - Check API key
    - Verify network connectivity
    - Confirm firewall rules
 
 2. **DNS Updates Not Propagating**:
+
    - Check zone serial numbers
    - Verify slave server configuration
    - Review update logs
@@ -215,4 +225,4 @@ A well-implemented DDNS solution with PowerDNS provides reliable and automated D
 
 - [PowerDNS Documentation](https://doc.powerdns.com/)
 - [PowerDNS API Reference](https://doc.powerdns.com/authoritative/http-api/)
-- [DNS Security Best Practices](https://www.icann.org/resources/pages/dns-security-2019-03-20-en) 
+- [DNS Security Best Practices](https://www.icann.org/resources/pages/dns-security-2019-03-20-en)

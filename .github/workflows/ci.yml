@@ -3,28 +3,28 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    branches: [ 'main' ]
+    branches: ['main']
   push:
-    branches: [ 'main' ]
+    branches: ['main']
 
 env:
   # Node and Package Management
   NODE_VERSION: 'latest'
   NPM_VERSION: 'latest'
   WRANGLER_VERSION: '3.28.2'
-  
+
   # Project Configuration
   PROJECT_NAME: 'blog-radaideh-info'
   CUSTOM_DOMAIN: 'blog.radaideh.info'
   DIST_DIR: './dist'
-  
+
   # Worker Configuration
   WORKER_NAME: 'blog-worker'
   DEPLOYMENT_ENV: 'production'
-  
+
   # Build Configuration
   BUILD_ENV: 'production'
-  
+
   # KV Namespace Names
   KV_STATS_NAME: 'BLOG_STATS'
   KV_VIEWS_NAME: 'BLOG_VIEWS'
@@ -48,25 +48,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
-          npm ci
-        
+          npm install
+
       - name: Check formatting
         run: npm run format:check
-        
+
       - name: Run linting
         run: npm run lint
-        
+
       - name: Type check
         run: npm run typecheck
 
@@ -77,19 +77,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
-          npm ci
-        
+          npm install
+
       - name: Test build
         run: |
           npm run build
@@ -118,16 +118,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build site
         run: npm run build
 
@@ -150,14 +150,14 @@ jobs:
           # Get all tags and sort them by version
           LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1 || echo "v0.0.0")
           CURRENT_VERSION=${LATEST_TAG#v}
-          
+
           # If no version exists, start with 0.0.0
           if [ -z "$CURRENT_VERSION" ]; then
             CURRENT_VERSION="0.0.0"
           fi
-          
+
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          
+
           case "${{ steps.bump.outputs.bump }}" in
             major)
               NEW_VERSION="$((major + 1)).0.0"
@@ -169,7 +169,7 @@ jobs:
               NEW_VERSION="${major}.${minor}.$((patch + 1))"
               ;;
           esac
-          
+
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Git Tag
@@ -187,7 +187,7 @@ jobs:
             const { owner, repo } = context.repo;
             const newVersion = '${{ steps.versioning.outputs.new_version }}';
             const tagName = `v${newVersion}`;
-            
+
             try {
               // Try to get existing release
               const existingRelease = await github.rest.repos.getReleaseByTag({
@@ -232,25 +232,25 @@ jobs:
     needs: [prepare-release]
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
           npm ci
           npm install -g wrangler@${{ env.WRANGLER_VERSION }}
-        
+
       - name: Build site
         run: npm run build
         env:
@@ -268,12 +268,12 @@ jobs:
             if [ -z "$KV_STATS" ]; then
               wrangler kv:namespace create ${{ env.KV_STATS_NAME }}
             fi
-            
+
             KV_VIEWS=$(wrangler kv:namespace list | grep ${{ env.KV_VIEWS_NAME }} || echo "")
             if [ -z "$KV_VIEWS" ]; then
               wrangler kv:namespace create ${{ env.KV_VIEWS_NAME }}
             fi
-            
+
             KV_REACTIONS=$(wrangler kv:namespace list | grep ${{ env.KV_REACTIONS_NAME }} || echo "")
             if [ -z "$KV_REACTIONS" ]; then
               wrangler kv:namespace create ${{ env.KV_REACTIONS_NAME }}
@@ -285,14 +285,14 @@ jobs:
           REPO="${GITHUB_REPOSITORY}"
           REPO_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r '.id')
-          
+
           # Create or get discussion category
           CATEGORY="Comments"
           CATEGORY_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussions" \
             -H "Accept: application/vnd.github.discussions-preview+json" \
             | jq -r '.[] | select(.category.name=="Comments") | .category.id')
-          
+
           # If category doesn't exist, create it
           if [ -z "$CATEGORY_ID" ]; then
             CATEGORY_ID=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -313,7 +313,7 @@ jobs:
           export KV_BLOG_VIEWS_PREVIEW_ID="${{ secrets.KV_BLOG_VIEWS_PREVIEW_ID }}"
           export KV_BLOG_REACTIONS_ID="${{ secrets.KV_BLOG_REACTIONS_ID }}"
           export KV_BLOG_REACTIONS_PREVIEW_ID="${{ secrets.KV_BLOG_REACTIONS_PREVIEW_ID }}"
-          
+
           # Generate wrangler.toml from template
           envsubst < wrangler.template.toml > wrangler.toml
 
@@ -359,7 +359,7 @@ jobs:
               required_contexts: [],
               description: '${{ env.DEPLOYMENT_ENV }} Deployment'
             });
-            
+
             const status = '${{ job.status }}' === 'success' ? 'success' : 'failure';
             await github.rest.repos.createDeploymentStatus({
               owner,
@@ -384,4 +384,4 @@ jobs:
               title: '🚨 Deployment Failed',
               body: `Deployment failed in run [#${context.runNumber}](https://github.com/${owner}/${repo}/actions/runs/${context.runId})\n\nCommit: ${context.sha}\nBranch: ${context.ref}`,
               labels: ['deployment', 'bug']
-            }); 
+            });

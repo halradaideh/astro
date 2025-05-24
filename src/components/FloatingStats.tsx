@@ -15,7 +15,7 @@ interface LikeData {
 
 const defaultLikeData: LikeData = {
   count: 0,
-  users: []
+  users: [],
 };
 
 const HeartIcon = ({ filled }: { filled: boolean }) => (
@@ -48,14 +48,17 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
 
         // Fetch likes
         const likeResponse = await fetch(`/api/likes${path}`).catch(() => null);
-        
+
         if (likeResponse?.ok) {
           const data = await likeResponse.json();
           setLikes(data);
-          
+
           // Check if current user has liked
           const currentUser = await getCurrentUser();
-          if (currentUser && data.users.some((user: { login: string }) => user.login === currentUser.login)) {
+          if (
+            currentUser &&
+            data.users.some((user: { login: string }) => user.login === currentUser.login)
+          ) {
             setIsLiked(true);
           }
         }
@@ -105,16 +108,18 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   return (
     <div className={`${styles.floatingStats} ${isLoading ? styles.loading : ''}`}>
       <div className={styles.stat}>
-        <span role="img" aria-label="views">👀</span>
+        <span role="img" aria-label="views">
+          👀
+        </span>
         <span>{views}</span>
       </div>
-      
+
       <div className={styles.stat}>
-        <button 
+        <button
           onClick={handleLike}
           className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
           disabled={isLoading}
-          aria-label={isLiked ? "Unlike post" : "Like post"}
+          aria-label={isLiked ? 'Unlike post' : 'Like post'}
         >
           <HeartIcon filled={isLiked} />
         </button>
@@ -131,7 +136,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         <div className={styles.likeDetails}>
           <div className={styles.likeDetailsHeader}>
             Liked by:
-            <button 
+            <button
               className={styles.closeButton}
               onClick={() => setShowLikeDetails(false)}
               aria-label="Close likes details"
@@ -140,13 +145,9 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
             </button>
           </div>
           <div className={styles.userList}>
-            {likes.users.map(user => (
+            {likes.users.map((user) => (
               <div key={user.login} className={styles.userItem}>
-                <img 
-                  src={user.avatar_url}
-                  alt={user.login}
-                  className={styles.userAvatar}
-                />
+                <img src={user.avatar_url} alt={user.login} className={styles.userAvatar} />
                 <span className={styles.userName}>{user.login}</span>
               </div>
             ))}
@@ -157,4 +158,4 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   );
 };
 
-export default FloatingStats; 
+export default FloatingStats;

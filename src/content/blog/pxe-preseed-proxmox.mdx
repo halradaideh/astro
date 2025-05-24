@@ -1,9 +1,9 @@
 ---
-title: "Automated Proxmox Deployment with PXE and Preseed"
-description: "Learn how to set up automated Proxmox deployments using PXE boot and Preseed configurations for efficient infrastructure management in a cyberpunk-inspired data center"
-pubDate: "2024-03-22"
-heroImage: "/blog/datacenter-automation.jpg"
-tags: ["proxmox", "pxe", "automation", "infrastructure", "devops", "matrix"]
+title: 'Automated Proxmox Deployment with PXE and Preseed'
+description: 'Learn how to set up automated Proxmox deployments using PXE boot and Preseed configurations for efficient infrastructure management in a cyberpunk-inspired data center'
+pubDate: '2024-03-22'
+heroImage: '/blog/datacenter-automation.jpg'
+tags: ['proxmox', 'pxe', 'automation', 'infrastructure', 'devops', 'matrix']
 ---
 
 # Automated Proxmox Deployment
@@ -42,16 +42,19 @@ Follow these guidelines for reliable automation:
 ## Understanding the Components
 
 ### 1. PXE (Preboot Execution Environment)
+
 - Network booting protocol
 - Allows computers to boot from network
 - Requires DHCP and TFTP servers
 
 ### 2. Preseed
+
 - Debian's automated installation method
 - Provides answers to installation questions
 - Supports custom scripts and configurations
 
 ### 3. Proxmox VE
+
 - Open-source virtualization platform
 - Based on Debian
 - Supports KVM and containers
@@ -72,7 +75,7 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
     range 192.168.1.100 192.168.1.200;
     option routers 192.168.1.1;
     option domain-name-servers 8.8.8.8, 8.8.4.4;
-    
+
     # PXE boot configuration
     filename "pxelinux.0";
     next-server 192.168.1.10; # TFTP server IP
@@ -180,7 +183,7 @@ import argparse
 
 def prepare_node(hostname, ip_address, gateway):
     """Prepare a new Proxmox node for clustering"""
-    
+
     commands = [
         f"pvecm create {hostname}",
         "systemctl restart pve-cluster",
@@ -188,13 +191,13 @@ def prepare_node(hostname, ip_address, gateway):
         f"ip route add default via {gateway}",
         "systemctl restart networking"
     ]
-    
+
     for cmd in commands:
         subprocess.run(cmd, shell=True, check=True)
 
 def configure_storage(storage_type, storage_path):
     """Configure storage for the Proxmox node"""
-    
+
     if storage_type == "ceph":
         setup_ceph()
     elif storage_type == "nfs":
@@ -209,7 +212,7 @@ def setup_ceph():
         "pveceph init --network 192.168.1.0/24",
         "pveceph createmon"
     ]
-    
+
     for cmd in commands:
         subprocess.run(cmd, shell=True, check=True)
 
@@ -227,7 +230,7 @@ def setup_zfs(storage_path):
         f"zpool create tank {storage_path}",
         "pvesm add zfspool tank --pool tank"
     ]
-    
+
     for cmd in commands:
         subprocess.run(cmd, shell=True, check=True)
 
@@ -238,9 +241,9 @@ if __name__ == "__main__":
     parser.add_argument("--gateway", required=True)
     parser.add_argument("--storage-type", choices=["ceph", "nfs", "zfs"])
     parser.add_argument("--storage-path")
-    
+
     args = parser.parse_args()
-    
+
     prepare_node(args.hostname, args.ip, args.gateway)
     if args.storage_type:
         configure_storage(args.storage_type, args.storage_path)
@@ -299,14 +302,14 @@ from email.message import EmailMessage
 
 def check_node_health():
     """Check various health metrics of the Proxmox node"""
-    
+
     checks = {
         "cpu_usage": "pvestatd cpu",
         "memory_usage": "pvestatd memory",
         "storage_usage": "pvesm status",
         "service_status": "systemctl status pve-cluster"
     }
-    
+
     results = {}
     for check, command in checks.items():
         try:
@@ -314,18 +317,18 @@ def check_node_health():
             results[check] = {"status": "ok", "output": output.decode()}
         except subprocess.CalledProcessError as e:
             results[check] = {"status": "error", "output": str(e)}
-    
+
     return results
 
 def send_alert(subject, body):
     """Send email alert for health issues"""
-    
+
     msg = EmailMessage()
     msg.set_content(body)
     msg['Subject'] = subject
     msg['From'] = "monitoring@example.com"
     msg['To'] = "admin@example.com"
-    
+
     with smtplib.SMTP('smtp.example.com', 587) as server:
         server.starttls()
         server.login("user", "password")
@@ -333,13 +336,13 @@ def send_alert(subject, body):
 
 def main():
     health_status = check_node_health()
-    
+
     # Check for issues
     issues = []
     for check, result in health_status.items():
         if result["status"] == "error":
             issues.append(f"{check}: {result['output']}")
-    
+
     # Send alert if issues found
     if issues:
         send_alert(
@@ -356,11 +359,13 @@ if __name__ == "__main__":
 ### Common Issues and Solutions
 
 1. **PXE Boot Fails**
+
    - Check DHCP server configuration
    - Verify TFTP server is accessible
    - Ensure boot files are present
 
 2. **Preseed Configuration Issues**
+
    - Validate preseed syntax
    - Check network connectivity
    - Review installation logs
@@ -373,11 +378,13 @@ if __name__ == "__main__":
 ## Best Practices
 
 1. **Security**
+
    - Use strong passwords
    - Implement network segmentation
    - Regular security updates
 
 2. **Backup**
+
    - Regular configuration backups
    - Test restore procedures
    - Document recovery process
@@ -395,4 +402,4 @@ Automating Proxmox deployment with PXE and Preseed significantly reduces setup t
 
 - [Proxmox Documentation](https://pve.proxmox.com/wiki/Main_Page)
 - [Debian Preseed Guide](https://www.debian.org/releases/stable/amd64/apb.en.html)
-- [PXE Boot Documentation](https://wiki.syslinux.org/wiki/index.php?title=PXELINUX) 
+- [PXE Boot Documentation](https://wiki.syslinux.org/wiki/index.php?title=PXELINUX)

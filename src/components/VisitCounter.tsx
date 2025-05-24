@@ -28,10 +28,12 @@ const VisitCounter: React.FC<VisitCounterProps> = ({ path }) => {
 
   return (
     <div className={styles.visitCounter}>
-      <span title="Visit Count" role="img" aria-label="visitors">👀</span>
+      <span title="Visit Count" role="img" aria-label="visitors">
+        👀
+      </span>
       <span>{count} views</span>
     </div>
   );
 };
 
-export default VisitCounter; 
+export default VisitCounter;
