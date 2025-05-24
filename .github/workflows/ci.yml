@@ -272,9 +272,18 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy ${{ env.DIST_DIR }} --project-name=${{ env.PROJECT_NAME }} --env ${{ env.DEPLOYMENT_ENV }} --env-vars "GISCUS_REPO=${{ env.GISCUS_REPO }},GISCUS_REPO_ID=${{ env.GISCUS_REPO_ID }},GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }},GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}"
+          command: pages deploy ${{ env.DIST_DIR }} --project-name=${{ env.PROJECT_NAME }} --env ${{ env.DEPLOYMENT_ENV }}
+          environment: ${{ env.DEPLOYMENT_ENV }}
+          secrets: |
+            GISCUS_REPO
+            GISCUS_REPO_ID
+            GISCUS_CATEGORY
+            GISCUS_CATEGORY_ID
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          GISCUS_REPO: ${{ env.GISCUS_REPO }}
+          GISCUS_REPO_ID: ${{ env.GISCUS_REPO_ID }}
+          GISCUS_CATEGORY: ${{ env.GISCUS_CATEGORY }}
+          GISCUS_CATEGORY_ID: ${{ env.GISCUS_CATEGORY_ID }}
 
       - name: Configure Custom Domain
         if: steps.pages-deploy.outcome == 'success'
