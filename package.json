@@ -33,6 +33,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@astrojs/ts-plugin": "^1.10.4",
     "@cloudflare/workers-types": "^4.20250524.0",
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.24",
