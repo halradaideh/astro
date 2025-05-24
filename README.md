@@ -85,6 +85,9 @@ npm run build
 
 # Deploy to Cloudflare Workers
 npm run deploy
+
+# Format code (runs automatically before commits)
+npm run format
 ```
 
 ### Cloudflare Worker Setup
@@ -152,6 +155,7 @@ MIT License - Feel free to use this code for your own blog!
 ### Cloudflare Pages Setup
 
 1. **Initial Setup**
+
    ```bash
    # Build and deploy
    npm run build
@@ -159,6 +163,7 @@ MIT License - Feel free to use this code for your own blog!
    ```
 
 2. **Required Environment Variables**
+
    ```bash
    # Cloudflare Configuration
    CLOUDFLARE_ACCOUNT_ID=your_account_id
@@ -172,12 +177,14 @@ MIT License - Feel free to use this code for your own blog!
    ```
 
 3. **KV Namespace Configuration**
+
    - Configure the following KV namespaces in Cloudflare Pages:
      ```bash
      VISIT_COUNTS=your_kv_id
      LIKES=your_kv_id
      ```
    - Bind namespaces in wrangler.toml:
+
      ```toml
      [[kv_namespaces]]
      binding = "VISIT_COUNTS"
@@ -200,12 +207,14 @@ MIT License - Feel free to use this code for your own blog!
 Common issues and solutions:
 
 1. **KV 500 Errors**
+
    - Verify KV namespace bindings
    - Check access permissions
    - Monitor Cloudflare Workers logs
    - Ensure proper error handling
 
 2. **Giscus Integration**
+
    - Verify GitHub repository permissions
    - Check theme synchronization
    - Validate environment variables
