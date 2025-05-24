@@ -41,7 +41,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         }).catch(() => null);
 
         if (viewResponse?.ok) {
-          const data = await viewResponse.json() as { total: number };
+          const data = (await viewResponse.json()) as { total: number };
           setViews(data.total);
         }
 
@@ -49,15 +49,12 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         const likeResponse = await fetch(`/api/likes${path}`).catch(() => null);
 
         if (likeResponse?.ok) {
-          const data = await likeResponse.json() as LikeData;
+          const data = (await likeResponse.json()) as LikeData;
           setLikes(data);
 
           // Check if current user has liked
           const currentUser = await getCurrentUser();
-          if (
-            currentUser &&
-            data.users.some((user) => user.login === currentUser.login)
-          ) {
+          if (currentUser && data.users.some((user) => user.login === currentUser.login)) {
             setIsLiked(true);
           }
         }
@@ -75,7 +72,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
     try {
       const response = await fetch('/api/auth/user');
       if (response.ok) {
-        const data = await response.json() as { login: string };
+        const data = (await response.json()) as { login: string };
         return data;
       }
       return null;
@@ -90,7 +87,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         method: 'POST',
       });
       if (response.ok) {
-        const data = await response.json() as LikeData;
+        const data = (await response.json()) as LikeData;
         setLikes(data);
         setIsLiked(!isLiked);
       }

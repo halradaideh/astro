@@ -15,7 +15,7 @@ const VisitCounter: React.FC<VisitCounterProps> = ({ path }) => {
           method: 'POST',
         });
         if (response.ok) {
-          const data = await response.json() as { total: number };
+          const data = (await response.json()) as { total: number };
           setCount(data.total);
         }
       } catch (error) {

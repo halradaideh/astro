@@ -17,4 +17,4 @@ export interface LikeData {
   }>;
 }
 
-export type Context = EventContext<Env, string, unknown>; 
+export type Context = EventContext<Env, string, unknown>;

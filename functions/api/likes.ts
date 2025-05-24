@@ -14,7 +14,7 @@ async function getGitHubUser(token: string): Promise<{ login: string; avatar_url
       },
     });
     if (!response.ok) return null;
-    const data = await response.json() as GitHubUserResponse;
+    const data = (await response.json()) as GitHubUserResponse;
     return {
       login: data.login,
       avatar_url: data.avatar_url,
@@ -24,17 +24,22 @@ async function getGitHubUser(token: string): Promise<{ login: string; avatar_url
   }
 }
 
-export const onRequest: PagesFunction<Env> = async (context: EventContext<Env, string, unknown>) => {
+export const onRequest: PagesFunction<Env> = async (
+  context: EventContext<Env, string, unknown>
+) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
 
   // Get current likes
-  const currentLikes = (await env.LIKES.get(path, 'json') as LikeData) || { count: 0, users: [] };
+  const currentLikes = ((await env.LIKES.get(path, 'json')) as LikeData) || { count: 0, users: [] };
 
   if (request.method === 'POST') {
     const cookie = request.headers.get('cookie') || '';
-    const token = cookie.split(';').find(c => c.trim().startsWith('gh_token='))?.split('=')[1];
+    const token = cookie
+      .split(';')
+      .find((c) => c.trim().startsWith('gh_token='))
+      ?.split('=')[1];
 
     if (!token) {
       return new Response('Unauthorized', { status: 401 });
@@ -45,7 +50,7 @@ export const onRequest: PagesFunction<Env> = async (context: EventContext<Env, s
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const userIndex = currentLikes.users.findIndex(u => u.login === user.login);
+    const userIndex = currentLikes.users.findIndex((u) => u.login === user.login);
     if (userIndex === -1) {
       // Add like
       currentLikes.users.push(user);
