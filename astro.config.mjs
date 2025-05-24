@@ -19,6 +19,7 @@ export default defineConfig({
     define: {
       'import.meta.env.GISCUS_REPO': JSON.stringify(process.env.GISCUS_REPO),
       'import.meta.env.GISCUS_REPO_ID': JSON.stringify(process.env.GISCUS_REPO_ID),
+      'import.meta.env.GISCUS_CATEGORY': JSON.stringify(process.env.GISCUS_CATEGORY || 'General'),
       'import.meta.env.GISCUS_CATEGORY_ID': JSON.stringify(process.env.GISCUS_CATEGORY_ID),
     },
   },
