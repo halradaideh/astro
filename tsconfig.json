@@ -4,7 +4,7 @@
   "exclude": ["dist"],
   "compilerOptions": {
     "strictNullChecks": true,
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "astro/client"],
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ESNext",
     "module": "ESNext",
