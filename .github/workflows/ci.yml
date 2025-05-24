@@ -25,6 +25,12 @@ env:
   # Build Configuration
   BUILD_ENV: 'production'
 
+  # Giscus Configuration
+  GISCUS_REPO: 'halradaideh/astro'
+  GISCUS_REPO_ID: '989307835'
+  GISCUS_CATEGORY: 'General'
+  GISCUS_CATEGORY_ID: 'DIC_kwDOOveju84Cqi8P'
+
   # KV Namespace Names
   KV_STATS_NAME: 'BLOG_STATS'
   KV_VIEWS_NAME: 'BLOG_VIEWS'
@@ -260,75 +266,13 @@ jobs:
           name: dist
           path: ${{ env.DIST_DIR }}
 
-      - name: Configure Worker
-        run: |
-          # Get repository information for Giscus
-          REPO="${GITHUB_REPOSITORY}"
-          REPO_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r '.id')
-
-          echo "Repository ID: ${REPO_ID}"
-
-          # Debug: First get and inspect the categories response
-          CATEGORIES_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussion_categories" \
-            -H "Accept: application/vnd.github.discussions-preview+json")
-
-          echo "Categories Response:"
-          echo "$CATEGORIES_RESPONSE" | jq '.'
-
-          # Try to find the Comments category
-          CATEGORY_ID=$(echo "$CATEGORIES_RESPONSE" | jq -r '.[] | select(.name=="Comments") | .id // empty')
-          echo "Found Category ID: ${CATEGORY_ID}"
-
-          # If category doesn't exist, create it
-          if [ -z "$CATEGORY_ID" ]; then
-            echo "Creating new Comments category..."
-            CREATE_RESPONSE=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/discussion_categories" \
-              -H "Accept: application/vnd.github.discussions-preview+json" \
-              -d '{"name":"Comments","description":"Blog post comments","emoji":":speech_balloon:"}')
-            
-            echo "Create Category Response:"
-            echo "$CREATE_RESPONSE" | jq '.'
-            
-            CATEGORY_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id // empty')
-            echo "New Category ID: ${CATEGORY_ID}"
-          fi
-
-          if [ -z "$CATEGORY_ID" ]; then
-            echo "Failed to get or create category ID"
-            exit 1
-          fi
-
-          # Use envsubst to replace variables in the template
-          export GISCUS_REPO="${REPO}"
-          export GISCUS_REPO_ID="${REPO_ID}"
-          export GISCUS_CATEGORY="Comments"
-          export GISCUS_CATEGORY_ID="${CATEGORY_ID}"
-          export KV_BLOG_STATS_ID="8a4cc18a92a34983911aeefd30a1fbf7"
-          export KV_BLOG_VIEWS_ID="1dae070e6434430eb664495afabd53e6"
-          export KV_BLOG_REACTIONS_ID="e17b552cb3ab47b3a5be5a870808bdbd"
-
-          # Generate wrangler.toml from template
-          envsubst < wrangler.template.toml > wrangler.toml
-
-      - name: Deploy Worker (Production)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy --env ${{ env.DEPLOYMENT_ENV }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-
       - name: Deploy to Cloudflare Pages
         id: pages-deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy ${{ env.DIST_DIR }} --project-name=${{ env.PROJECT_NAME }} --env ${{ env.DEPLOYMENT_ENV }}
+          command: pages deploy ${{ env.DIST_DIR }} --project-name=${{ env.PROJECT_NAME }} --env ${{ env.DEPLOYMENT_ENV }} --env-vars "GISCUS_REPO=${{ env.GISCUS_REPO }},GISCUS_REPO_ID=${{ env.GISCUS_REPO_ID }},GISCUS_CATEGORY=${{ env.GISCUS_CATEGORY }},GISCUS_CATEGORY_ID=${{ env.GISCUS_CATEGORY_ID }}"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
