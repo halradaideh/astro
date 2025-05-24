@@ -10,7 +10,10 @@ export default defineConfig({
 	integrations: [
 		mdx(),
 		sitemap(),
-		react(),
+		react({
+			include: ['**/react/*', '**/components/**/*.{jsx,tsx}'],
+			experimentalReactChildren: true
+		}),
 	],
 	vite: {
 		define: {

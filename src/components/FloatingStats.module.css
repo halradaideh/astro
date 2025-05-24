@@ -1,0 +1,223 @@
+.floatingStats {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.floatingStats:hover {
+  transform: translateY(-2px);
+}
+
+.stat {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  padding: 0.25rem;
+  min-height: 32px;
+  width: 100%;
+}
+
+.stat span[role="img"] {
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.stat > span:last-child,
+.countButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 1.5rem;
+}
+
+.likeButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: inherit;
+  opacity: 1;
+  font-size: 1.2rem;
+  line-height: 1;
+  width: auto;
+}
+
+.countButton {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.countButton:not(:disabled):hover {
+  opacity: 0.7;
+}
+
+.countButton.active {
+  opacity: 0.7;
+}
+
+.likeButton:disabled,
+.countButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.likeButton:not(:disabled):hover {
+  transform: scale(1.1);
+}
+
+.liked {
+  color: #ff4b4b !important;
+}
+
+.likeDetails {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 1rem);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 101;
+}
+
+.likeDetailsHeader {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  border-radius: 4px;
+  color: #666;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.userList {
+  padding: 0.5rem;
+}
+
+.userItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.userItem:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.userAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.userName {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.tooltip {
+  position: absolute;
+  right: calc(100% + 1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  padding: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: max-content;
+  z-index: 101;
+}
+
+.avatars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -0.5rem;
+}
+
+.avatar:first-child {
+  margin-left: 0;
+}
+
+@media (max-width: 768px) {
+  .floatingStats {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .tooltip {
+    display: none;
+  }
+  
+  .likeDetails {
+    position: fixed;
+    top: auto;
+    bottom: calc(100% + 1rem);
+    right: 0;
+    width: calc(100% - 2rem);
+    max-height: 60vh;
+    margin: 0 1rem;
+  }
+} 

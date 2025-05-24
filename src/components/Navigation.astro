@@ -1,40 +1,88 @@
+---
+const pathname = Astro.url.pathname;
+import { SITE_TITLE } from '../consts';
+---
+
 <nav class="nav-container">
   <div class="nav-content">
-    <div class="nav-title">
-      <a href="/">Tech Blog</a>
+    <div class="nav-left">
+      <h2><a href="/">{SITE_TITLE}</a></h2>
     </div>
-    <div class="nav-links">
-      <a href="/" class="nav-link">Home</a>
-      <a href="/blog" class="nav-link">Blog</a>
-      <a href="/about" class="nav-link">About</a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="/" class={pathname === "/" ? "nav-link active" : "nav-link"}>Home</a>
+        <a href="/blog" class={pathname.startsWith("/blog") ? "nav-link active" : "nav-link"}>Blog</a>
+        <a href="/about" class={pathname === "/about" ? "nav-link active" : "nav-link"}>About</a>
+      </div>
+      <div class="social-links">
+        <a href="https://github.com/halradaideh" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 16 16" aria-hidden="true" width="20" height="20">
+            <path
+              fill="currentColor"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+            ></path>
+          </svg>
+        </a>
+        <a href="https://www.linkedin.com/in/hamdan-a-radaideh/" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+            <path
+              fill="currentColor"
+              d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+            />
+          </svg>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75zM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zm12 0a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H18a.75.75 0 0 1 .75.75z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </nav>
 
 <style>
   .nav-container {
-    background-color: #ffffff;
-    border-bottom: 1px solid #eaeaea;
-    padding: 1rem 0;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 99;
+    transition: all 0.3s ease;
+  }
+
+  .nav-container.scrolled {
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
   }
 
   .nav-content {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-  .nav-title a {
+  .nav-left h2 {
+    margin: 0;
     font-size: 1.5rem;
-    font-weight: bold;
-    color: #000;
+    font-weight: 600;
+  }
+
+  .nav-left a {
     text-decoration: none;
+    color: var(--text-color);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
   }
 
   .nav-links {
@@ -43,23 +91,147 @@
   }
 
   .nav-link {
-    color: #666;
+    color: var(--text-muted);
     text-decoration: none;
-    transition: color 0.2s ease;
+    font-size: 1rem;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
   }
 
   .nav-link:hover {
-    color: #000;
+    color: var(--text-color);
+    border-bottom-color: var(--border-color);
+  }
+
+  .nav-link.active {
+    color: var(--text-color);
+    border-bottom-color: var(--accent-color);
+  }
+
+  .social-links {
+    display: flex;
+    gap: 1rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--border-color);
+    align-items: center;
+  }
+
+  .social-links a {
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .social-links a:hover {
+    color: var(--text-color);
+  }
+
+  .sun-icon,
+  .moon-icon {
+    display: none;
+  }
+
+  [data-theme="dark"] .moon-icon {
+    display: none;
+  }
+
+  [data-theme="dark"] .sun-icon {
+    display: block;
+  }
+
+  [data-theme="light"] .sun-icon {
+    display: none;
+  }
+
+  [data-theme="light"] .moon-icon {
+    display: block;
   }
 
   @media (max-width: 768px) {
-    .nav-content {
-      flex-direction: column;
+    .nav-container {
+      padding: 0.75rem 1rem;
+    }
+
+    .nav-container.scrolled {
+      padding: 0.5rem 1rem;
+    }
+
+    .nav-left h2 {
+      font-size: 1.2rem;
+    }
+
+    .nav-right {
       gap: 1rem;
     }
-    
+
     .nav-links {
       gap: 1rem;
     }
+
+    .nav-link {
+      font-size: 0.9rem;
+    }
+
+    .social-links {
+      padding-left: 0.75rem;
+      gap: 0.75rem;
+    }
   }
-</style> 
+</style>
+
+<script>
+  // Add scroll behavior
+  const nav = document.querySelector('.nav-container');
+  let lastScroll = 0;
+
+  if (nav) {
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      
+      if (currentScroll > lastScroll && currentScroll > 100) {
+        nav.classList.add('scrolled');
+      } else if (currentScroll < lastScroll && currentScroll < 100) {
+        nav.classList.remove('scrolled');
+      }
+      
+      lastScroll = currentScroll;
+    });
+  }
+
+  // Theme toggle functionality
+  const themeToggle = document.getElementById('theme-toggle');
+  
+  // Check for saved theme preference, otherwise use system preference
+  const getPreferredTheme = (): 'light' | 'dark' => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Apply theme
+  const setTheme = (theme: 'light' | 'dark') => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  };
+
+  // Initial theme setup - run as soon as possible
+  document.documentElement.setAttribute('data-theme', getPreferredTheme());
+
+  // Toggle theme
+  themeToggle?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') as 'light' | 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  });
+
+  // Listen for system theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      setTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+</script> 

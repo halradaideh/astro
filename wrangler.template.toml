@@ -1,0 +1,37 @@
+name = "blog-worker"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "blog-worker-prod"
+vars = { ENVIRONMENT = "production" }
+
+# Giscus Configuration
+[env.production.vars]
+GISCUS_REPO = "${GISCUS_REPO}"
+GISCUS_REPO_ID = "${GISCUS_REPO_ID}"
+GISCUS_CATEGORY = "${GISCUS_CATEGORY}"
+GISCUS_CATEGORY_ID = "${GISCUS_CATEGORY_ID}"
+
+# KV Namespace Bindings
+[[env.production.kv_namespaces]]
+binding = "BLOG_STATS"
+id = "${KV_BLOG_STATS_ID}"
+preview_id = "${KV_BLOG_STATS_PREVIEW_ID}"
+
+[[env.production.kv_namespaces]]
+binding = "BLOG_VIEWS"
+id = "${KV_BLOG_VIEWS_ID}"
+preview_id = "${KV_BLOG_VIEWS_PREVIEW_ID}"
+
+[[env.production.kv_namespaces]]
+binding = "BLOG_REACTIONS"
+id = "${KV_BLOG_REACTIONS_ID}"
+preview_id = "${KV_BLOG_REACTIONS_PREVIEW_ID}"
+
+# Analytics and Monitoring
+[env.production.analytics_engine]
+enabled = true
+
+[env.production.worker_monitoring]
+enabled = true 
