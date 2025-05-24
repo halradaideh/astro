@@ -1,9 +1,5 @@
 /// <reference types="@cloudflare/workers-types" />
-/// <reference path="../types.d.ts" />
-
-interface Env {
-  VISIT_COUNTS: KVNamespace;
-}
+import type { Env, VisitCount } from '../types';
 
 export const onRequest: PagesFunction<Env> = async (context: EventContext<Env, string, unknown>) => {
   const { request, env } = context;

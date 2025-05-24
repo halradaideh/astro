@@ -1,17 +1,5 @@
 /// <reference types="@cloudflare/workers-types" />
-/// <reference path="../types.d.ts" />
-
-interface Env {
-  LIKES: KVNamespace;
-}
-
-interface LikeData {
-  count: number;
-  users: Array<{
-    login: string;
-    avatar_url: string;
-  }>;
-}
+import type { Env, LikeData } from '../types';
 
 interface GitHubUserResponse {
   login: string;
