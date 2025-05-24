@@ -1,12 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
-import type { Env, VisitCount } from '../types';
+import type { Env, VisitCount } from '../../../types';
 
 export const onRequest: PagesFunction<Env> = async (
   context: EventContext<Env, string, unknown>
 ) => {
   const { request, env } = context;
-  const url = new URL(request.url);
-  const path = url.pathname;
 
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
@@ -25,11 +23,15 @@ export const onRequest: PagesFunction<Env> = async (
     return new Response('Method Not Allowed', {
       status: 405,
       headers: {
-        Allow: 'GET, POST, OPTIONS',
+        'Allow': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Origin': '*',
       },
     });
   }
+
+  // Get the blog post path from the URL
+  const url = new URL(request.url);
+  const path = `/blog/${context.params.path}`;
 
   // Get current count
   const currentCount = ((await env.VISIT_COUNTS.get(path, 'json')) as VisitCount) || { total: 0 };
@@ -45,4 +47,4 @@ export const onRequest: PagesFunction<Env> = async (
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     },
   });
-};
+}; 
