@@ -7,7 +7,7 @@ test.describe('Blog Homepage', () => {
 
     // Check main navigation elements - be more specific with selectors
     await expect(page.locator('nav')).toBeVisible();
-    await expect(page.locator('nav a[href="/"]')).toBeVisible(); // Home link
+    await expect(page.locator('nav a.nav-link[href="/"]')).toBeVisible(); // Home link with class
     await expect(page.locator('nav a[href="/blog"]')).toBeVisible(); // Blog link in nav
     await expect(page.locator('nav a[href="/about"]')).toBeVisible(); // About link in nav
   });
@@ -26,7 +26,8 @@ test.describe('Blog Homepage', () => {
     // Be more specific - target the nav About link
     await page.locator('nav a[href="/about"]').click();
     await expect(page).toHaveURL(/.*about/);
-    await expect(page.getByText('Hamdan Radaideh')).toBeVisible();
+    // Look for more specific text that appears on the about page
+    await expect(page.getByText('Principal Site Reliability Engineer')).toBeVisible();
   });
 
   test('should have responsive design', async ({ page }) => {
