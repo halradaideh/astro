@@ -23,7 +23,7 @@ export const onRequest: PagesFunction<Env> = async (
     return new Response('Method Not Allowed', {
       status: 405,
       headers: {
-        'Allow': 'GET, POST, OPTIONS',
+        Allow: 'GET, POST, OPTIONS',
         'Access-Control-Allow-Origin': '*',
       },
     });
@@ -47,4 +47,4 @@ export const onRequest: PagesFunction<Env> = async (
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     },
   });
-}; 
+};
