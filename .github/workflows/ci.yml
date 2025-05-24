@@ -91,8 +91,15 @@ jobs:
       - name: Get latest version
         id: versioning
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Get all tags and sort them by version
+          LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1 || echo "v0.0.0")
           CURRENT_VERSION=${LATEST_TAG#v}
+          
+          # If no version exists, start with 0.0.0
+          if [ -z "$CURRENT_VERSION" ]; then
+            CURRENT_VERSION="0.0.0"
+          fi
+          
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
           
           case "${{ steps.bump.outputs.bump }}" in
@@ -102,7 +109,7 @@ jobs:
             minor)
               NEW_VERSION="${major}.$((minor + 1)).0"
               ;;
-            patch)
+            *)
               NEW_VERSION="${major}.${minor}.$((patch + 1))"
               ;;
           esac
