@@ -2,7 +2,7 @@
   "name": "tech-blog",
   "type": "module",
   "version": "1.0.0",
-  "description": "A modern blog site built with Astro, featuring Giscus comments and Cloudflare Pages deployment",
+  "description": "A modern blog site built with Astro with AI, featuring Giscus comments and Cloudflare Pages deployment",
   "author": "Hamdan Radaideh",
   "license": "CC-BY-NC-4.0",
   "repository": {
