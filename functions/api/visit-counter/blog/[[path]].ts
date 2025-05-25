@@ -1,10 +1,11 @@
 /// <reference types="@cloudflare/workers-types" />
 import type { Env, VisitCount } from '../../../types';
 
-// Allowed origins for CORS - get from environment variables
+// Allowed origins for CORS - using hardcoded values that match deployment
 const ALLOWED_ORIGINS = [
-  process.env.SITE_URL!,
-  process.env.DEV_URL!, // For development
+  'https://blog.radaideh.info',
+  'https://blog-radaideh-info.pages.dev',
+  'http://localhost:4321', // For development
 ];
 
 function getCorsHeaders(origin: string | null): Record<string, string> {

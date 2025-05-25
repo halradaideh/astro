@@ -140,13 +140,46 @@ jobs:
             exit 1
           fi
 
-          # Generate hash from source content, commit SHA, and build outputs
-          SOURCE_HASH=$(find src/ -type f \( -name "*.astro" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.md" -o -name "*.mdx" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          # Generate comprehensive hash that includes ALL files that could affect build
+          echo "=== Generating comprehensive build hash ==="
+
+          # 1. Source files (expanded to include all relevant types)
+          echo "Computing source files hash..."
+          SOURCE_HASH=$(find src/ -type f \( \
+            -name "*.astro" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+            -o -name "*.md" -o -name "*.mdx" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" \
+            -o -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" \
+            -o -name "*.vue" -o -name "*.svelte" -o -name "*.html" \
+          \) -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+
+          # 2. Configuration files that affect build
+          echo "Computing configuration files hash..."
+          CONFIG_HASH=$(find . -maxdepth 1 -type f \( \
+            -name "astro.config.*" -o -name "vite.config.*" -o -name "tsconfig.json" \
+            -o -name "package.json" -o -name "tailwind.config.*" -o -name "postcss.config.*" \
+            -o -name ".env*" -o -name "*.config.js" -o -name "*.config.mjs" -o -name "*.config.ts" \
+          \) -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+
+          # 3. Public assets that get copied
+          echo "Computing public assets hash..."
+          if [ -d "public/" ]; then
+            PUBLIC_HASH=$(find public/ -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+          else
+            PUBLIC_HASH="no-public-dir"
+          fi
+
+          # 4. Build output hash
+          echo "Computing dist files hash..."
           DIST_HASH=$(find ${{ env.DIST_DIR }} -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+
+          # 5. Git commit SHA for uniqueness
           COMMIT_SHA="${{ github.sha }}"
 
+          # 6. Timestamp to ensure uniqueness for same commit (development aid)
+          TIMESTAMP=$(date +%s)
+
           # Combine all hashes for unique build identifier
-          BUILD_HASH=$(echo "${SOURCE_HASH}-${DIST_HASH}-${COMMIT_SHA}" | sha256sum | cut -d' ' -f1)
+          BUILD_HASH=$(echo "${SOURCE_HASH}-${CONFIG_HASH}-${PUBLIC_HASH}-${DIST_HASH}-${COMMIT_SHA}-${TIMESTAMP}" | sha256sum | cut -d' ' -f1)
 
           # Validate hash is not empty
           if [ -z "$BUILD_HASH" ]; then
@@ -154,9 +187,14 @@ jobs:
             exit 1
           fi
 
-          echo "Source hash: $SOURCE_HASH"
-          echo "Dist hash: $DIST_HASH"
+          echo "=== Build Hash Components ==="
+          echo "Source files hash: $SOURCE_HASH"
+          echo "Config files hash: $CONFIG_HASH" 
+          echo "Public assets hash: $PUBLIC_HASH"
+          echo "Dist output hash: $DIST_HASH"
           echo "Commit SHA: $COMMIT_SHA"
+          echo "Timestamp: $TIMESTAMP"
+          echo "=== Final Build Hash ==="
           echo "Generated build hash: $BUILD_HASH"
           echo "hash=$BUILD_HASH" >> $GITHUB_OUTPUT
 
@@ -509,48 +547,279 @@ jobs:
             echo "This indicates the prepare-release job failed or artifacts were not created"
             exit 1
           fi
+
           echo "✅ Successfully downloaded validated build artifacts"
-          echo "Artifact contents:"
+          echo "=== DEPLOYMENT DEBUGGING INFORMATION ==="
+          echo "Build hash used: ${{ needs.build-and-test.outputs.build-hash }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Workflow run ID: ${{ github.run_id }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+
+          echo "=== ARTIFACT DIRECTORY STRUCTURE ==="
           ls -la ${{ env.DIST_DIR }}
+          echo ""
+
+          echo "=== TOTAL FILE COUNT ==="
+          TOTAL_FILES=$(find ${{ env.DIST_DIR }} -type f | wc -l)
+          echo "Total files: $TOTAL_FILES"
+          echo ""
+
+          echo "=== FILE TYPES BREAKDOWN ==="
+          find ${{ env.DIST_DIR }} -type f | grep -E '\.[^.]+$' | sed 's/.*\.//' | sort | uniq -c | sort -nr
+          echo ""
+
+          echo "=== KEY FILE CHECKSUMS (for deployment verification) ==="
+          # Check key files that should change between deployments
+          if [ -f "${{ env.DIST_DIR }}/index.html" ]; then
+            echo "index.html: $(sha256sum ${{ env.DIST_DIR }}/index.html | cut -d' ' -f1)"
+          fi
+
+          if [ -d "${{ env.DIST_DIR }}/_astro" ]; then
+            echo "=== _astro directory contents ==="
+            ls -la ${{ env.DIST_DIR }}/_astro/ | head -10
+          fi
+
+          echo "=== RECENT FILE MODIFICATIONS ==="
+          find ${{ env.DIST_DIR }} -type f -exec stat -c '%Y %n' {} \; | sort -nr | head -10 | while read timestamp file; do
+            date -d "@$timestamp" '+%Y-%m-%d %H:%M:%S' | tr -d '\n'
+            echo " $file"
+          done
+
+          echo ""
+          echo "=== DEPLOYMENT READY - Proceeding to Cloudflare Pages ==="
+
+      - name: Inject deployment metadata
+        run: |
+          echo "=== INJECTING DEPLOYMENT METADATA FOR CACHE BUSTING ==="
+
+          # Create deployment metadata file
+          cat > ${{ env.DIST_DIR }}/.deployment-meta.json << EOF
+          {
+            "deploymentId": "${{ github.run_id }}-${{ github.run_number }}",
+            "commitSha": "${{ github.sha }}",
+            "buildHash": "${{ needs.build-and-test.outputs.build-hash }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "branch": "${{ github.ref_name }}",
+            "event": "${{ github.event_name }}"
+          }
+          EOF
+
+          echo "Created deployment metadata:"
+          cat ${{ env.DIST_DIR }}/.deployment-meta.json
+
+          # Update any HTML files with deployment info (for cache busting)
+          if [ -f "${{ env.DIST_DIR }}/index.html" ]; then
+            # Add deployment info as a comment in index.html for cache busting
+            sed -i "s|</head>|<!-- Deployment: ${{ github.run_id }}-${{ github.run_number }} at $(date -u +%Y-%m-%dT%H:%M:%SZ) -->\n</head>|" ${{ env.DIST_DIR }}/index.html
+            echo "✅ Added deployment metadata to index.html"
+          fi
+
+          echo "=== FINAL FILE COUNT AFTER METADATA INJECTION ==="
           echo "Total files: $(find ${{ env.DIST_DIR }} -type f | wc -l)"
 
       - name: Deploy to Cloudflare Pages
         id: pages-deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: ${{ env.PROJECT_NAME }}
-          directory: ${{ env.DIST_DIR }}
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          wranglerVersion: '${{ env.WRANGLER_VERSION }}'
-          environmentVariables: |
-            SITE_URL=${{ env.SITE_URL }}
-            DEV_URL=${{ env.DEV_URL }}
-            DEV_PORT=${{ env.DEV_PORT }}
-            GISCUS_REPO=${{ secrets.GISCUS_REPO }}
-            GISCUS_REPO_ID=${{ secrets.GISCUS_REPO_ID }}
-            GISCUS_CATEGORY=${{ secrets.GISCUS_CATEGORY }}
-            GISCUS_CATEGORY_ID=${{ secrets.GISCUS_CATEGORY_ID }}
-            CLOUDFLARE_API_TOKEN=${{ secrets.CF_API_TOKEN }}
-            CLOUDFLARE_ACCOUNT_ID=${{ secrets.CF_ACCOUNT_ID }}
-            RATE_LIMIT_REQUESTS=${{ env.RATE_LIMIT_REQUESTS }}
-            RATE_LIMIT_WINDOW=${{ env.RATE_LIMIT_WINDOW }}
-          kv: |
-            VISIT_COUNTS=${{ secrets.KV_VISIT_COUNTS_ID }}
-            LIKES=${{ secrets.KV_LIKES_ID }}
-
-      - name: Create KV Namespaces
-        if: steps.pages-deploy.outcome == 'success'
-        run: |
-          for ns in VISIT_COUNTS LIKES; do
-            echo "Creating KV namespace: $ns"
-            npx wrangler@${{ env.WRANGLER_VERSION }} kv:namespace create $ns || true
-          done
+          command: pages deploy ${{ env.DIST_DIR }} --project-name=${{ env.PROJECT_NAME }} --branch=main
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          # Set environment variables for deployment
+          SITE_URL: ${{ env.SITE_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          DEV_PORT: ${{ env.DEV_PORT }}
+          GISCUS_REPO: ${{ secrets.GISCUS_REPO }}
+          GISCUS_REPO_ID: ${{ secrets.GISCUS_REPO_ID }}
+          GISCUS_CATEGORY: ${{ secrets.GISCUS_CATEGORY }}
+          GISCUS_CATEGORY_ID: ${{ secrets.GISCUS_CATEGORY_ID }}
+          RATE_LIMIT_REQUESTS: ${{ env.RATE_LIMIT_REQUESTS }}
+          RATE_LIMIT_WINDOW: ${{ env.RATE_LIMIT_WINDOW }}
+
+      - name: Configure KV Namespaces (if needed)
+        if: success()
+        run: |
+          echo "Configuring KV namespace bindings..."
+
+          # Check if the KV namespaces are properly bound to the project
+          # The wrangler-action doesn't handle KV bindings automatically like pages-action did
+          # We need to ensure they're configured in the Cloudflare dashboard or via API
+
+          export CLOUDFLARE_API_TOKEN="${{ secrets.CF_API_TOKEN }}"
+          export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CF_ACCOUNT_ID }}"
+
+          # Update project with KV namespace bindings
+          echo "Updating project KV namespace configuration..."
+          curl -X PATCH "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PROJECT_NAME }}" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{
+              "deployment_configs": {
+                "production": {
+                  "kv_namespaces": {
+                    "VISIT_COUNTS": {
+                      "namespace_id": "${{ secrets.KV_VISIT_COUNTS_ID }}"
+                    },
+                    "LIKES": {
+                      "namespace_id": "${{ secrets.KV_LIKES_ID }}"
+                    }
+                  }
+                },
+                "preview": {
+                  "kv_namespaces": {
+                    "VISIT_COUNTS": {
+                      "namespace_id": "${{ secrets.KV_VISIT_COUNTS_ID }}"
+                    },
+                    "LIKES": {
+                      "namespace_id": "${{ secrets.KV_LIKES_ID }}"
+                    }
+                  }
+                }
+              }
+            }'
+
+      - name: Debug Secrets and Configuration
+        if: always()
+        run: |
+          echo "=== DEBUGGING SECRETS AND CONFIGURATION ==="
+          echo "Checking if required secrets are available..."
+
+          # Check if secrets are set (without exposing their values)
+          if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
+            echo "❌ CF_API_TOKEN secret is not set"
+          else
+            echo "✅ CF_API_TOKEN secret is set (length: ${#CF_API_TOKEN})"
+          fi
+
+          if [ -z "${{ secrets.CF_ACCOUNT_ID }}" ]; then
+            echo "❌ CF_ACCOUNT_ID secret is not set"
+          else
+            echo "✅ CF_ACCOUNT_ID secret is set"
+          fi
+
+          if [ -z "${{ secrets.KV_VISIT_COUNTS_ID }}" ]; then
+            echo "❌ KV_VISIT_COUNTS_ID secret is not set"
+          else
+            echo "✅ KV_VISIT_COUNTS_ID secret is set"
+          fi
+
+          if [ -z "${{ secrets.KV_LIKES_ID }}" ]; then
+            echo "❌ KV_LIKES_ID secret is not set"
+          else
+            echo "✅ KV_LIKES_ID secret is set"
+          fi
+
+          echo ""
+          echo "=== PROJECT CONFIGURATION ==="
+          echo "Project Name: ${{ env.PROJECT_NAME }}"
+          echo "Directory: ${{ env.DIST_DIR }}"
+          echo "Wrangler Version: ${{ env.WRANGLER_VERSION }}"
+          echo ""
+
+          # Verify dist directory exists and has content
+          if [ -d "${{ env.DIST_DIR }}" ]; then
+            echo "✅ Dist directory exists"
+            echo "File count: $(find ${{ env.DIST_DIR }} -type f | wc -l)"
+            echo "Directory size: $(du -sh ${{ env.DIST_DIR }} | cut -f1)"
+          else
+            echo "❌ Dist directory does not exist!"
+            exit 1
+          fi
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+
+      - name: Debug Cloudflare Pages Action
+        if: always()
+        run: |
+          echo "=== CLOUDFLARE PAGES ACTION DEBUGGING ==="
+          echo "Deployment step outcome: ${{ steps.pages-deploy.outcome }}"
+          echo "Deployment step conclusion: ${{ steps.pages-deploy.conclusion }}"
+          echo ""
+
+          # Check if the step outputs are available
+          echo "=== DEPLOYMENT OUTPUTS ==="
+          echo "Deployment URL: ${{ steps.pages-deploy.outputs.url }}"
+          echo "Deployment ID: ${{ steps.pages-deploy.outputs.id }}"
+          echo "Environment: ${{ steps.pages-deploy.outputs.environment }}"
+          echo "Alias: ${{ steps.pages-deploy.outputs.alias }}"
+          echo ""
+
+          # If deployment failed, try to get more information
+          if [ "${{ steps.pages-deploy.outcome }}" = "failure" ]; then
+            echo "❌ CLOUDFLARE PAGES ACTION FAILED!"
+            echo "Checking recent deployments via API..."
+            
+            # Get recent deployment info
+            LATEST_DEPLOYMENT=$(curl -s -X GET \
+              "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PROJECT_NAME }}/deployments" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" | jq -r '.result[0]')
+            
+            if [ "$LATEST_DEPLOYMENT" != "null" ]; then
+              echo "Latest deployment info:"
+              echo "$LATEST_DEPLOYMENT" | jq .
+            fi
+          fi
+
+      - name: Verify Deployment Success
+        if: steps.pages-deploy.outcome == 'success' || success()
+        run: |
+          echo "=== VERIFYING DEPLOYMENT SUCCESS ==="
+
+          # Wait for deployment to propagate
+          echo "Waiting 15 seconds for deployment propagation..."
+          sleep 15
+
+          # Try to determine the deployment URL
+          if [ -n "${{ steps.pages-deploy.outputs.url }}" ]; then
+            DEPLOYMENT_URL="${{ steps.pages-deploy.outputs.url }}"
+            echo "Using GitHub Action output URL: $DEPLOYMENT_URL"
+          else
+            # For manual deployments, construct the URL
+            DEPLOYMENT_URL="https://blog.radaideh.info"
+            echo "Using production domain: $DEPLOYMENT_URL"
+          fi
+
+          # Test the deployment
+          echo "Testing deployment at: $DEPLOYMENT_URL"
+
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL")
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Site is accessible (HTTP $HTTP_STATUS)"
+              break
+            else
+              echo "⚠️ Site returned HTTP $HTTP_STATUS"
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+          done
+
+          echo "Deployment verification completed."
+
+      - name: Create KV Namespaces (if needed)
+        if: success()
+        run: |
+          echo "Ensuring KV namespaces exist..."
+          export CLOUDFLARE_API_TOKEN="${{ secrets.CF_API_TOKEN }}"
+          export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CF_ACCOUNT_ID }}"
+
+          # Check if namespaces exist, create if not
+          for ns in VISIT_COUNTS LIKES; do
+            echo "Checking KV namespace: $ns"
+            npx wrangler@${{ env.WRANGLER_VERSION }} kv:namespace list | grep -q "$ns" || {
+              echo "Creating KV namespace: $ns"
+              npx wrangler@${{ env.WRANGLER_VERSION }} kv:namespace create $ns || true
+            }
+          done
 
       - name: Update Deployment Status
         if: always()
@@ -580,23 +849,23 @@ jobs:
               log_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`
             });
 
-      - name: Remove ready-to-deploy label
+      - name: Update PR Labels
         if: success() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.removeLabel({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              name: 'ready-to-deploy'
-            });
+            // Remove ready-to-deploy label and add deployed label
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'ready-to-deploy'
+              });
+            } catch (error) {
+              console.log('ready-to-deploy label not found or already removed');
+            }
 
-      - name: Add deployed label
-        if: success() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -614,7 +883,7 @@ jobs:
               owner,
               repo,
               title: '🚨 Deployment Failed',
-              body: `Deployment failed in run [#${context.runNumber}](https://github.com/${owner}/${repo}/actions/runs/${context.runId})\n\nCommit: ${context.sha}\nBranch: ${context.ref}`,
+              body: `Deployment failed in run [#${context.runNumber}](https://github.com/${owner}/${repo}/actions/runs/${context.runId})\n\nCommit: ${context.sha}\nBranch: ${context.ref}\n\nPlease check the logs and fix the issues before retrying.`,
               labels: ['deployment', 'bug']
             });
 

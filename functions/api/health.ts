@@ -30,13 +30,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       kvHealthy = false;
     }
 
-    // Check environment variables
-    const envHealthy = !!(process.env.SITE_URL && process.env.CLOUDFLARE_API_TOKEN);
+    // Check if required KV namespaces are available
+    const envHealthy = !!(env.VISIT_COUNTS && env.LIKES);
 
     const health: HealthResponse = {
       status: kvHealthy && envHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: '1.0.0',
       uptime: Date.now() - startTime,
       services: {
         kv: kvHealthy,
