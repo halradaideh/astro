@@ -87,8 +87,9 @@ jobs:
             ~/.npm
             node_modules
             ~/.cache/Cypress
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-
             ${{ runner.os }}-node-
 
       - name: Install dependencies (optimized)
@@ -139,8 +140,13 @@ jobs:
             exit 1
           fi
 
-          # Generate hash from all files in dist directory
-          BUILD_HASH=$(find ${{ env.DIST_DIR }} -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          # Generate hash from source content, commit SHA, and build outputs
+          SOURCE_HASH=$(find src/ -type f \( -name "*.astro" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.md" -o -name "*.mdx" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          DIST_HASH=$(find ${{ env.DIST_DIR }} -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          COMMIT_SHA="${{ github.sha }}"
+
+          # Combine all hashes for unique build identifier
+          BUILD_HASH=$(echo "${SOURCE_HASH}-${DIST_HASH}-${COMMIT_SHA}" | sha256sum | cut -d' ' -f1)
 
           # Validate hash is not empty
           if [ -z "$BUILD_HASH" ]; then
@@ -148,6 +154,9 @@ jobs:
             exit 1
           fi
 
+          echo "Source hash: $SOURCE_HASH"
+          echo "Dist hash: $DIST_HASH"
+          echo "Commit SHA: $COMMIT_SHA"
           echo "Generated build hash: $BUILD_HASH"
           echo "hash=$BUILD_HASH" >> $GITHUB_OUTPUT
 
@@ -231,7 +240,10 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-node-
 
       - name: Install dependencies (from cache)
         run: npm ci --install-links
@@ -245,13 +257,26 @@ jobs:
         continue-on-error: true
         id: download-artifacts
 
-      - name: Fallback build if artifacts not available
-        if: steps.download-artifacts.outcome == 'failure'
+      - name: Setup Node.js with caching (if needed)
+        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
+          cache: 'npm'
+
+      - name: Force fresh build for main branch or fallback build
+        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
         run: |
-          echo "Artifacts not available, building locally..."
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Main branch detected - forcing fresh build to ensure latest code"
+          else
+            echo "Artifacts not available, building locally..."
+          fi
           npm install -g npm@${{ env.NPM_VERSION }}
           npm ci --install-links
           npm run build
+          echo "Fresh build completed for commit: ${{ github.sha }}"
 
       - name: Verify dist directory
         run: |
@@ -477,20 +502,25 @@ jobs:
         id: download-artifacts
 
       - name: Setup Node.js with caching (if needed)
-        if: steps.download-artifacts.outcome == 'failure'
+        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
 
-      - name: Fallback build if artifacts not available
-        if: steps.download-artifacts.outcome == 'failure'
+      - name: Force fresh build for main branch or fallback build
+        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
         run: |
-          echo "Artifacts not available, building locally..."
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Main branch detected - forcing fresh build to ensure latest code"
+          else
+            echo "Artifacts not available, building locally..."
+          fi
           npm install -g npm@${{ env.NPM_VERSION }}
           npm ci --install-links
           npm run build
+          echo "Fresh build completed for commit: ${{ github.sha }}"
 
       - name: Verify dist directory
         run: |
