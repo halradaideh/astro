@@ -4,7 +4,7 @@
   <img src="public/profile-banner.jpg" alt="Hamdan Radaideh - DevOps & SRE" width="100%" style="border-radius: 10px;">
 </div>
 
-[![Site Status](https://img.shields.io/website?url=https%3A%2F%2Fblog.radiadeh.info)](https://blog.radiadeh.info)
+[![Site Status](https://img.shields.io/website?url=https%3A%2F%2Fblog.radaideh.info)](https://blog.radiadeh.info)
 [![Built with Astro](https://img.shields.io/badge/Built%20with-Astro-FF5D01.svg)](https://astro.build)
 [![Powered by Claude](https://img.shields.io/badge/Powered%20by-Claude%20AI-7C3AED.svg)](https://anthropic.com)
 
@@ -36,86 +36,186 @@ This blog is built with modern technologies:
 - 🔍 SEO optimized
 - 📰 RSS feed support
 
-## 🚀 Development
+## 🚀 Quick Start
+
+### For New Developers (Recommended)
+
+```bash
+git clone https://github.com/halradaideh/astro.git
+cd astro
+npm install
+npm run setup-env:dev    # One-command environment setup
+npm run dev              # Start developing!
+```
+
+The development setup automatically configures all required environment variables with safe development values.
+
+### Using Docker (Alternative)
+
+For a completely isolated development environment:
+
+```bash
+git clone https://github.com/halradaideh/astro.git
+cd astro
+npm run dev:docker       # Build and run in Docker with live reloading
+```
+
+This approach ensures consistent development environment across different machines and operating systems.
+
+### For Production Deployment
+
+```bash
+git clone https://github.com/halradaideh/astro.git
+cd astro
+npm install
+npm run setup-env:prod   # Create production template
+# Edit .env with your real values
+npm run validate-env     # Verify configuration
+npm run build           # Deploy!
+```
+
+## 🔧 Environment Management
+
+This project uses a unified environment setup system that eliminates hardcoded configurations and enforces DRY principles.
+
+### Environment Commands
+
+```bash
+# Quick development setup (recommended for new developers)
+npm run setup-env:dev      # Creates .env with development-safe values
+
+# Production template setup
+npm run setup-env:prod     # Creates .env from template for production
+
+# Validation and management
+npm run validate-env       # Validate current environment configuration
+npm run setup-env          # Smart setup: validates existing or creates new
+npm run setup-env help     # Show all available options
+```
+
+### Environment Features
+
+- **🔒 Strict Validation**: No fallbacks - fails fast if variables are missing
+- **🚀 Development Ready**: One-command setup with safe development values
+- **🔄 Backup System**: Automatically backs up existing .env files
+- **📋 Clear Guidance**: Helpful error messages and setup instructions
+- **🎯 DRY Principle**: Single source of truth for all configurations
+
+### Required Environment Variables
+
+| Variable | Description | Development Default | Production |
+|----------|-------------|--------------------|-----------| 
+| `SITE_URL` | Production site URL | `https://blog.radaideh.info` | **Required** |
+| `DEV_URL` | Development server URL | `http://localhost:4321` | **Required** |
+| `DEV_PORT` | Development server port | `4321` | **Required** |
+| `GISCUS_REPO` | GitHub repository for comments | `halradaideh/astro` | **Required** |
+| `GISCUS_REPO_ID` | Giscus repository ID | Real ID | **Required** |
+| `GISCUS_CATEGORY` | Giscus discussion category | `General` | **Required** |
+| `GISCUS_CATEGORY_ID` | Giscus category ID | Real ID | **Required** |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token | Dev-safe placeholder | **Required** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID | Dev-safe placeholder | **Required** |
+| `RATE_LIMIT_REQUESTS` | Rate limit per window | `60` | **Required** |
+| `RATE_LIMIT_WINDOW` | Rate limit window (seconds) | `60` | **Required** |
+| `SESSION_SECRET` | Session secret key | Dev-safe string | **Required** |
+| `ENABLE_SECURITY_HEADERS` | Enable security headers | `true` | **Required** |
+| `MAX_REQUEST_SIZE` | Maximum request size | `10mb` | **Required** |
+| `ALLOWED_UPLOAD_TYPES` | Allowed upload types | Image types | **Required** |
+
+## 🛠️ Development
 
 ### Prerequisites
 
-1. **Cloudflare Account Setup**
+1. **Node.js** (latest LTS version)
+2. **npm** (comes with Node.js)
+3. **Git** for version control
+4. **Docker** (optional, for containerized development)
 
-   - Create a Cloudflare account
-   - Set up a Cloudflare Worker
-   - Create the following KV namespaces:
-     - `BLOG_STATS` - For storing blog statistics
-     - `BLOG_VIEWS` - For tracking page views
-     - `BLOG_REACTIONS` - For storing user reactions
+### Docker Development
 
-2. **GitHub Secrets Configuration**
+The project includes Docker support for a consistent, isolated development environment:
 
-   Configure the following secrets in your GitHub repository settings:
+#### Benefits:
+- **Environment Consistency**: Same Node.js version across all machines
+- **No Local Dependencies**: No need to install Node.js locally
+- **Isolation**: Prevents conflicts with other projects
+- **Easy Cleanup**: Remove container without affecting host system
 
-   ```bash
-   # Cloudflare Configuration
-   CF_API_TOKEN=your_cloudflare_api_token
-   CF_ACCOUNT_ID=your_cloudflare_account_id
+#### Docker Commands:
+```bash
+# One-command development (builds and runs)
+npm run dev:docker
 
-   # Giscus Configuration (GitHub Discussions)
-   GISCUS_REPO=your_repo_name
-   GISCUS_REPO_ID=your_repo_id
-   GISCUS_CATEGORY=your_category_name
-   GISCUS_CATEGORY_ID=your_category_id
+# Or step by step:
+npm run docker:build       # Build the image
+npm run docker:run         # Run the container
+npm run docker:clean       # Clean up the image
 
-   # KV Namespace IDs
-   KV_VISIT_COUNTS_ID=your_visit_counts_kv_id
-   KV_LIKES_ID=your_likes_kv_id
-   ```
+# Access the running container
+docker exec -it astro-blog-dev sh
+```
 
-3. **Environment Variables (Local Development)**
-
-   ```bash
-   # Copy env.example to .env.local
-   cp env.example .env.local
-
-   # Edit .env.local with your values
-   GISCUS_REPO=your_repo
-   GISCUS_REPO_ID=your_repo_id
-   GISCUS_CATEGORY=your_category
-   GISCUS_CATEGORY_ID=your_category_id
-   ```
-
-4. **KV Namespace Bindings**
-   ```bash
-   # Bind KV namespaces to your worker
-   wrangler kv:namespace create BLOG_STATS
-   wrangler kv:namespace create BLOG_VIEWS
-   wrangler kv:namespace create BLOG_REACTIONS
-   ```
+#### Features:
+- **Live Reloading**: Source code changes reflect immediately
+- **Port Mapping**: Accessible at `http://localhost:4321`
+- **Volume Mounting**: Real-time file synchronization
+- **Health Checks**: Automatic container health monitoring
+- **Non-root User**: Secure container execution
 
 ### Development Commands
 
 ```bash
-# Install dependencies
-npm install
+# Environment setup and validation
+npm run setup-env:dev      # Quick development setup
+npm run validate-env       # Validate environment configuration
 
-# Start development server
-npm run dev
+# Development server
+npm run dev                # Start development server (includes validation)
+npm run dev:docker         # Start development server in Docker container
 
-# Build for production
-npm run build
+# Docker commands
+npm run docker:build       # Build Docker image
+npm run docker:run         # Run existing Docker image
+npm run docker:clean       # Remove Docker image
 
-# Run tests
-npm run test
+# Building and testing
+npm run build              # Build for production
+npm run preview            # Preview production build locally
+npm run test               # Run Playwright tests
+npm run test:ui            # Run tests with UI
 
-# Run tests with UI
-npm run test:ui
+# Code quality
+npm run lint               # Run ESLint
+npm run lint:fix           # Fix ESLint issues automatically
+npm run format             # Format code with Prettier
+npm run format:check       # Check code formatting
+npm run typecheck          # Run TypeScript type checking
 
-# Type checking
-npm run typecheck
+# Performance and analysis
+npm run lighthouse         # Run Lighthouse performance audit
+npm run analyze            # Analyze bundle size
+npm run security-audit     # Run security audit
+npm run check-deps         # Check for unused dependencies
+npm run update-deps        # Update dependencies
+```
 
-# Linting
-npm run lint
+### Project Structure
 
-# Format code
-npm run format
+```
+astro/
+├── scripts/               # Build and setup scripts
+│   └── setup-env.js      # Unified environment management
+├── src/                  # Source code
+│   ├── components/       # Astro/React components
+│   ├── content/          # Blog posts and content
+│   ├── layouts/          # Page layouts
+│   ├── pages/            # Route pages
+│   └── styles/           # CSS styles
+├── functions/            # Cloudflare Pages Functions
+├── public/               # Static assets
+├── tests/                # E2E tests
+├── .github/              # GitHub workflows and templates
+├── env.example           # Environment template
+└── package.json          # Dependencies and scripts
 ```
 
 ### CI/CD Pipeline
@@ -125,31 +225,10 @@ The project includes a comprehensive CI/CD pipeline with:
 - **Quality Checks**: ESLint, Prettier, TypeScript validation
 - **Testing**: Playwright E2E tests
 - **Security Scanning**: Trivy vulnerability scanner
+- **Performance Testing**: Lighthouse CI with budgets
 - **Build Verification**: Automated build testing
 - **Deployment**: Automated deployment to Cloudflare Pages
-- **Release Management**: Semantic versioning and GitHub releases
-
-### Cloudflare Worker Setup
-
-1. **Initialize Wrangler**
-
-   ```bash
-   npx wrangler init
-   ```
-
-2. **Configure wrangler.toml**
-
-   ```toml
-   name = "blog-worker"
-   main = "src/worker.ts"
-   compatibility_date = "2024-01-01"
-
-   kv_namespaces = [
-     { binding = "BLOG_STATS", id = "your_kv_id" },
-     { binding = "BLOG_VIEWS", id = "your_kv_id" },
-     { binding = "BLOG_REACTIONS", id = "your_kv_id" }
-   ]
-   ```
+- **Dependency Management**: Automated dependency updates
 
 ## 📝 Latest Articles
 
@@ -165,104 +244,144 @@ This blog's design and structure were created with the assistance of Claude AI, 
 - Implementing cybersecurity-themed components
 - Optimizing the site structure
 - Creating engaging technical content
+- Building the unified environment management system
 
 ## 📄 License
 
-MIT License - Feel free to use this code for your own blog!
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.
+
+### You are free to:
+- ✅ **Personal Use**: Use this code for your personal blog or portfolio
+- ✅ **Educational Use**: Learn from and modify the code
+- ✅ **Share**: Copy and redistribute the code
+- ✅ **Adapt**: Remix, transform, and build upon the code
+
+### Under the following terms:
+- 📝 **Attribution**: You must give appropriate credit and link to this repository
+- 🚫 **Non-Commercial**: You may not use this for commercial purposes
+
+### Commercial Use
+For commercial licensing, please contact [Hamdan Radaideh](https://github.com/halradaideh) to discuss terms.
+
+**License**: [CC BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## 🔄 Recent Updates
 
+- **Unified Environment System**: Refactored to single script handling setup, validation, and management
+- **DRY Principle Enforcement**: Eliminated all hardcoded configurations and fallback values
+- **Enhanced Developer Experience**: One-command development setup with automatic validation
+- **Improved CI/CD**: Added performance testing, security scanning, and dependency management
+- **Repository Organization**: Moved scripts to dedicated directory for cleaner structure
 - Fixed Giscus comment system integration issues and improved theme synchronization
-- Resolved Cloudflare KV 500 errors with enhanced error handling and logging
-- Migrated to Cloudflare Pages for improved deployment workflow
+- Enhanced error handling for KV operations and improved logging
 - Added comprehensive rate limiting and security features
-- Implemented version tagging for better release management
-- Enhanced error handling for KV operations
-- Added GitHub authentication for reactions system
 
 ## 🛡️ Security Features
 
-- Rate limiting on API endpoints
-- GitHub-based authentication for reactions
-- CORS protection
-- Input validation and sanitization
-- Secure session handling
-- Error logging and monitoring
+- **Strict Environment Validation**: No fallbacks, fail-fast approach
+- **Security Headers**: Comprehensive security header implementation
+- **Rate Limiting**: Configurable rate limiting on API endpoints
+- **Session Security**: Secure session handling with proper secrets
+- **Input Validation**: Request size limits and upload type restrictions
+- **CORS Protection**: Properly configured CORS policies
+- **Error Handling**: Secure error logging without information disclosure
 
 ## 🚀 Deployment
 
 ### Cloudflare Pages Setup
 
-1. **Initial Setup**
+1. **Environment Configuration**
 
    ```bash
-   # Build and deploy
+   # Create production environment
+   npm run setup-env:prod
+   
+   # Edit .env with your actual values:
+   # - SITE_URL: Your production domain
+   # - GISCUS_*: Your GitHub repository settings
+   # - CLOUDFLARE_*: Your actual Cloudflare credentials
+   # - SESSION_SECRET: A secure random string (32+ chars)
+   
+   # Validate configuration
+   npm run validate-env
+   ```
+
+2. **Build and Deploy**
+
+   ```bash
    npm run build
    npm run deploy
    ```
 
-2. **Required Environment Variables**
+3. **Required Cloudflare Settings**
 
+   Set these environment variables in your Cloudflare Pages dashboard:
+   
    ```bash
-   # Cloudflare Configuration
-   CLOUDFLARE_ACCOUNT_ID=your_account_id
-   CLOUDFLARE_API_TOKEN=your_api_token
-
-   # Giscus Configuration
+   # Copy all variables from your .env file
+   SITE_URL=your_production_url
    GISCUS_REPO=your_repo
    GISCUS_REPO_ID=your_repo_id
-   GISCUS_CATEGORY=your_category
-   GISCUS_CATEGORY_ID=your_category_id
+   # ... all other variables from .env
    ```
 
-3. **KV Namespace Configuration**
+### GitHub Secrets Configuration
 
-   - Configure the following KV namespaces in Cloudflare Pages:
-     ```bash
-     VISIT_COUNTS=your_kv_id
-     LIKES=your_kv_id
-     ```
-   - Bind namespaces in wrangler.toml:
+For the CI/CD pipeline, configure these secrets in your GitHub repository:
 
-     ```toml
-     [[kv_namespaces]]
-     binding = "VISIT_COUNTS"
-     id = "your_kv_id"
+```bash
+# Cloudflare Configuration
+CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+SITE_URL=your_production_url
 
-     [[kv_namespaces]]
-     binding = "LIKES"
-     id = "your_kv_id"
-     ```
+# Giscus Configuration
+GISCUS_REPO=your_repo_name
+GISCUS_REPO_ID=your_repo_id
+GISCUS_CATEGORY=your_category_name
+GISCUS_CATEGORY_ID=your_category_id
+
+# Security
+SESSION_SECRET=your_secure_session_secret
+```
 
 ### Monitoring and Analytics
 
-- Cloudflare Analytics enabled for traffic monitoring
-- Worker monitoring for performance tracking
-- Error logging and alerting configured
-- Rate limit monitoring
+- **Cloudflare Analytics**: Traffic and performance monitoring
+- **Lighthouse CI**: Automated performance budgets
+- **Security Scanning**: Vulnerability detection in CI/CD
+- **Error Monitoring**: Comprehensive error logging and alerting
+- **Health Checks**: API endpoint health monitoring
 
 ### Troubleshooting
 
 Common issues and solutions:
 
-1. **KV 500 Errors**
+1. **Environment Validation Failures**
+   ```bash
+   npm run validate-env    # Check specific errors
+   npm run setup-env:dev   # Reset to development defaults
+   npm run setup-env help  # View all available commands
+   ```
 
-   - Verify KV namespace bindings
-   - Check access permissions
-   - Monitor Cloudflare Workers logs
-   - Ensure proper error handling
-
-2. **Giscus Integration**
-
-   - Verify GitHub repository permissions
-   - Check theme synchronization
-   - Validate environment variables
+2. **Development Server Issues**
+   ```bash
+   # The dev server includes automatic validation
+   npm run dev             # Validates before starting
+   
+   # If validation fails, check your .env file
+   npm run validate-env    # Get detailed error messages
+   ```
 
 3. **Deployment Issues**
-   - Clear Cloudflare cache
-   - Check build logs
-   - Verify environment variables
-   - Monitor Pages deployment status
+   ```bash
+   # Verify all environment variables are set
+   npm run validate-env
+   
+   # Check build locally
+   npm run build
+   npm run preview
+   ```
 
 ---
 

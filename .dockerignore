@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build outputs
+dist
+.astro
+
+# Environment and configuration
+.env
+.env.local
+.env.backup.*
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Version control
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# CI/CD
+.github
+
+# Test files
+tests
+playwright-report
+test-results
+
+# Cache and temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Logs
+logs
+*.log
+
+# Docker files (to avoid recursive copying)
+Dockerfile*
+.dockerignore 

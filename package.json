@@ -4,14 +4,22 @@
   "version": "1.0.0",
   "description": "A modern blog site built with Astro, featuring Giscus comments and Cloudflare Pages deployment",
   "author": "Hamdan Radaideh",
-  "license": "MIT",
+  "license": "CC-BY-NC-4.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/halradaideh/tech-blog.git"
+    "url": "https://github.com/halradaideh/astro.git"
   },
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
-    "dev": "astro dev",
+    "setup-env": "node scripts/setup-env.js",
+    "setup-env:dev": "node scripts/setup-env.js dev",
+    "setup-env:prod": "node scripts/setup-env.js prod",
+    "validate-env": "node scripts/setup-env.js validate",
+    "dev": "npm run validate-env && astro dev",
+    "dev:docker": "docker build -t astro-blog-dev . && docker run --rm -it -p 4321:4321 -v $(pwd):/app -v /app/node_modules astro-blog-dev",
+    "docker:build": "docker build -t astro-blog-dev .",
+    "docker:run": "docker run --rm -it -p 4321:4321 -v $(pwd):/app -v /app/node_modules astro-blog-dev",
+    "docker:clean": "docker rmi astro-blog-dev 2>/dev/null || true",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -21,7 +29,13 @@
     "format:check": "prettier --check .",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "analyze": "npx @next/bundle-analyzer build",
+    "lighthouse": "npx lighthouse http://localhost:4321 --output=html --output-path=./lighthouse-report.html",
+    "security-audit": "npm audit --audit-level moderate",
+    "size-limit": "npx size-limit",
+    "check-deps": "npx depcheck",
+    "update-deps": "npx npm-check-updates -u"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",

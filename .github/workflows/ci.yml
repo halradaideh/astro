@@ -13,28 +13,34 @@ env:
   NPM_VERSION: 'latest'
   WRANGLER_VERSION: '3.28.2'
 
-  # Project Configuration
+  # Site Configuration - Use secrets for actual values
+  SITE_URL: ${{ secrets.SITE_URL }}
   PROJECT_NAME: 'blog-radaideh-info'
-  CUSTOM_DOMAIN: 'blog.radaideh.info'
+  CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
   DIST_DIR: './dist'
 
-  # Worker Configuration
-  WORKER_NAME: 'blog-worker'
-  DEPLOYMENT_ENV: 'production'
+  # Development Configuration
+  DEV_URL: 'http://localhost:4321'
+  DEV_PORT: '4321'
 
-  # Build Configuration
+  # Deployment Configuration
+  DEPLOYMENT_ENV: 'production'
   BUILD_ENV: 'production'
 
-  # Giscus Configuration
-  GISCUS_REPO: 'halradaideh/astro'
-  GISCUS_REPO_ID: 'R_kgDOOvejuw'
-  GISCUS_CATEGORY: 'General'
-  GISCUS_CATEGORY_ID: 'DIC_kwDOOveju84Cqi8P'
+  # Giscus Configuration - Use secrets for actual values
+  GISCUS_REPO: ${{ secrets.GISCUS_REPO }}
+  GISCUS_REPO_ID: ${{ secrets.GISCUS_REPO_ID }}
+  GISCUS_CATEGORY: ${{ secrets.GISCUS_CATEGORY }}
+  GISCUS_CATEGORY_ID: ${{ secrets.GISCUS_CATEGORY_ID }}
 
   # KV Namespace Names
   KV_STATS_NAME: 'BLOG_STATS'
   KV_VIEWS_NAME: 'BLOG_VIEWS'
   KV_REACTIONS_NAME: 'BLOG_REACTIONS'
+
+  # Rate Limiting Configuration
+  RATE_LIMIT_REQUESTS: '60'
+  RATE_LIMIT_WINDOW: '60'
 
 permissions:
   contents: write
@@ -48,26 +54,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality-checks:
+  # Combined job: Quality checks + Build + Tests (runs once, caches everything)
+  build-and-test:
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ready-to-test') || 
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
+      github.event_name == 'push'
+    outputs:
+      cache-key: ${{ steps.cache.outputs.cache-hit }}
+      build-hash: ${{ steps.build-hash.outputs.hash }}
+    
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
-      - name: Setup Node.js
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
 
-      - name: Install dependencies
+      # Enhanced npm caching
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            ~/.cache/Cypress
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies (optimized)
         run: |
           npm install -g npm@${{ env.NPM_VERSION }}
-          npm install
-          npm ci --install-links
+          if [ "${{ steps.cache.outputs.cache-hit }}" != "true" ]; then
+            npm ci --install-links
+          else
+            echo "Using cached node_modules"
+          fi
 
+      # Quality checks
       - name: Run ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx,.astro --no-cache
 
@@ -77,33 +109,35 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-  test:
-    needs: [quality-checks]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      # Install Playwright browsers (cached)
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          check-latest: true
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm install -g npm@${{ env.NPM_VERSION }}
-          npm install
-          npm ci --install-links
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
+      # Build once and cache
       - name: Build site
         run: npm run build
 
+      - name: Generate build hash
+        id: build-hash
+        run: |
+          BUILD_HASH=$(find ${{ env.DIST_DIR }} -type f -exec md5sum {} \; | sort | md5sum | cut -d' ' -f1)
+          echo "hash=$BUILD_HASH" >> $GITHUB_OUTPUT
+
+      # Upload build artifacts for reuse
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.build-hash.outputs.hash }}
+          path: ${{ env.DIST_DIR }}
+          retention-days: 1
+
+      # Run Playwright tests on built site
       - name: Run Playwright tests
         run: npm run test || true
         env:
@@ -113,44 +147,19 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ github.run_id }}
           path: playwright-report/
           retention-days: 7
 
-  test-build:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          check-latest: true
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm install -g npm@${{ env.NPM_VERSION }}
-          npm install
-          npm ci --install-links
-
-      - name: Test build
-        run: |
-          npm run build
-          if [ $? -eq 0 ]; then
-            echo "Build successful!"
-          else
-            echo "Build failed!"
-            exit 1
-          fi
-
+  # Security scan (uses cached dependencies)
   security-scan:
-    needs: [quality-checks]
+    needs: [build-and-test]
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ready-to-test') || 
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
+      github.event_name == 'push'
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -162,47 +171,83 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
-  prepare-release:
-    needs: [test-build]
-    if: |
-      (github.event_name == 'pull_request' &&
-      github.event.action == 'closed' &&
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.base.ref == 'main') ||
-      (github.event_name == 'push' &&
-      github.ref == 'refs/heads/main')
+  # Performance test (reuses build artifact)
+  performance-test:
+    needs: [build-and-test]
     runs-on: ubuntu-latest
-    outputs:
-      new_version: ${{ steps.versioning.outputs.new_version }}
-      release_id: ${{ steps.create_release.outputs.release_id }}
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ready-to-test') || 
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
+      github.event_name == 'push'
+    
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
 
-      - name: Setup Node.js
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
 
-      - name: Install dependencies
-        run: |
-          npm install -g npm@${{ env.NPM_VERSION }}
-          npm install
-          npm ci --install-links
-
-      - name: Build site
-        run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      # Restore cached dependencies
+      - name: Restore node modules cache
+        uses: actions/cache@v4
         with:
-          name: dist
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies (from cache)
+        run: npm ci --install-links
+
+      # Download pre-built artifacts
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ needs.build-and-test.outputs.build-hash }}
           path: ${{ env.DIST_DIR }}
-          retention-days: 1
+
+      - name: Serve site
+        run: npm run preview &
+        
+      - name: Wait for server
+        run: sleep 10
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: '.lighthouserc.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Check bundle size
+        run: npx bundlesize
+
+  # Release preparation (only when ready-to-deploy label is added)
+  prepare-release:
+    needs: [build-and-test, security-scan, performance-test]
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.versioning.outputs.new_version }}
+      release_id: ${{ steps.create_release.outputs.release_id }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      # No need to rebuild - reuse artifacts
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ needs.build-and-test.outputs.build-hash }}
+          path: ${{ env.DIST_DIR }}
 
       - name: Determine version bump
         id: bump
@@ -269,13 +314,13 @@ jobs:
                 tag: tagName
               });
               
-              // If release exists, update it
+              // If release exists, update it with auto-generated notes
               const release = await github.rest.repos.updateRelease({
                 owner,
                 repo,
                 release_id: existingRelease.data.id,
                 name: `Release ${tagName}`,
-                body: 'Automated release update',
+                body: `Automated release ${tagName} with latest updates and improvements.`,
                 draft: false,
                 prerelease: false
               });
@@ -283,13 +328,13 @@ jobs:
               core.setOutput('release_id', release.data.id);
             } catch (error) {
               if (error.status === 404) {
-                // Release doesn't exist, create new one
+                // Release doesn't exist, create new one with auto-generated release notes
                 const release = await github.rest.repos.createRelease({
                   owner,
                   repo,
                   tag_name: tagName,
                   name: `Release ${tagName}`,
-                  body: 'Automated release',
+                  body: `Automated release ${tagName}`,
                   draft: false,
                   prerelease: false,
                   generate_release_notes: true
@@ -301,20 +346,25 @@ jobs:
               }
             }
 
+  # Deploy (reuses the same build artifacts)
   deploy:
-    needs: [prepare-release]
+    needs: [prepare-release, build-and-test]
     runs-on: ubuntu-latest
     environment: production
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Reuse the same build artifacts from earlier
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: dist-${{ needs.build-and-test.outputs.build-hash }}
           path: ${{ env.DIST_DIR }}
 
       - name: Deploy to Cloudflare Pages
@@ -329,10 +379,17 @@ jobs:
           branch: main
           wranglerVersion: '${{ env.WRANGLER_VERSION }}'
           environmentVariables: |
+            SITE_URL=${{ env.SITE_URL }}
+            DEV_URL=${{ env.DEV_URL }}
+            DEV_PORT=${{ env.DEV_PORT }}
             GISCUS_REPO=${{ secrets.GISCUS_REPO }}
             GISCUS_REPO_ID=${{ secrets.GISCUS_REPO_ID }}
             GISCUS_CATEGORY=${{ secrets.GISCUS_CATEGORY }}
             GISCUS_CATEGORY_ID=${{ secrets.GISCUS_CATEGORY_ID }}
+            CLOUDFLARE_API_TOKEN=${{ secrets.CF_API_TOKEN }}
+            CLOUDFLARE_ACCOUNT_ID=${{ secrets.CF_ACCOUNT_ID }}
+            RATE_LIMIT_REQUESTS=${{ env.RATE_LIMIT_REQUESTS }}
+            RATE_LIMIT_WINDOW=${{ env.RATE_LIMIT_WINDOW }}
           kv: |
             VISIT_COUNTS=${{ secrets.KV_VISIT_COUNTS_ID }}
             LIKES=${{ secrets.KV_LIKES_ID }}
@@ -376,6 +433,30 @@ jobs:
               log_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`
             });
 
+      - name: Remove ready-to-deploy label
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'ready-to-deploy'
+            });
+
+      - name: Add deployed label
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['deployed']
+            });
+
       - name: Notify on Failure
         if: failure()
         uses: actions/github-script@v7
@@ -389,3 +470,30 @@ jobs:
               body: `Deployment failed in run [#${context.runNumber}](https://github.com/${owner}/${repo}/actions/runs/${context.runId})\n\nCommit: ${context.sha}\nBranch: ${context.ref}`,
               labels: ['deployment', 'bug']
             });
+
+  # Cleanup artifacts after successful deployment
+  cleanup:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Cleanup old artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.startsWith('dist-')) {
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
