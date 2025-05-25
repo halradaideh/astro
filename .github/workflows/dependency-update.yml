@@ -1,0 +1,71 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Monday at 6 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for outdated packages
+        run: |
+          npm outdated --json > outdated.json || true
+          cat outdated.json
+
+      - name: Update dependencies
+        run: |
+          npx npm-check-updates -u
+          npm install
+
+      - name: Run tests after updates
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: '⬆️ Automated Dependency Updates'
+          body: |
+            ## Automated Dependency Updates
+
+            This PR updates dependencies to their latest versions.
+
+            ### Changes
+            - Updated npm packages to latest versions
+            - All tests pass
+            - Build successful
+
+            ### Verification
+            - ✅ Linting passes
+            - ✅ Type checking passes  
+            - ✅ Tests pass
+            - ✅ Build successful
+
+            **Please review the changes before merging.**
+          branch: automated-dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
