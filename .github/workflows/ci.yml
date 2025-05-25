@@ -641,14 +641,14 @@ jobs:
         if: success()
         run: |
           echo "Configuring KV namespace bindings..."
-          
+
           # Check if the KV namespaces are properly bound to the project
           # The wrangler-action doesn't handle KV bindings automatically like pages-action did
           # We need to ensure they're configured in the Cloudflare dashboard or via API
-          
+
           export CLOUDFLARE_API_TOKEN="${{ secrets.CF_API_TOKEN }}"
           export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CF_ACCOUNT_ID }}"
-          
+
           # Update project with KV namespace bindings
           echo "Updating project KV namespace configuration..."
           curl -X PATCH "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PROJECT_NAME }}" \
@@ -684,39 +684,39 @@ jobs:
         run: |
           echo "=== DEBUGGING SECRETS AND CONFIGURATION ==="
           echo "Checking if required secrets are available..."
-          
+
           # Check if secrets are set (without exposing their values)
           if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
             echo "❌ CF_API_TOKEN secret is not set"
           else
             echo "✅ CF_API_TOKEN secret is set (length: ${#CF_API_TOKEN})"
           fi
-          
+
           if [ -z "${{ secrets.CF_ACCOUNT_ID }}" ]; then
             echo "❌ CF_ACCOUNT_ID secret is not set"
           else
             echo "✅ CF_ACCOUNT_ID secret is set"
           fi
-          
+
           if [ -z "${{ secrets.KV_VISIT_COUNTS_ID }}" ]; then
             echo "❌ KV_VISIT_COUNTS_ID secret is not set"
           else
             echo "✅ KV_VISIT_COUNTS_ID secret is set"
           fi
-          
+
           if [ -z "${{ secrets.KV_LIKES_ID }}" ]; then
             echo "❌ KV_LIKES_ID secret is not set"
           else
             echo "✅ KV_LIKES_ID secret is set"
           fi
-          
+
           echo ""
           echo "=== PROJECT CONFIGURATION ==="
           echo "Project Name: ${{ env.PROJECT_NAME }}"
           echo "Directory: ${{ env.DIST_DIR }}"
           echo "Wrangler Version: ${{ env.WRANGLER_VERSION }}"
           echo ""
-          
+
           # Verify dist directory exists and has content
           if [ -d "${{ env.DIST_DIR }}" ]; then
             echo "✅ Dist directory exists"
@@ -736,7 +736,7 @@ jobs:
           echo "Deployment step outcome: ${{ steps.pages-deploy.outcome }}"
           echo "Deployment step conclusion: ${{ steps.pages-deploy.conclusion }}"
           echo ""
-          
+
           # Check if the step outputs are available
           echo "=== DEPLOYMENT OUTPUTS ==="
           echo "Deployment URL: ${{ steps.pages-deploy.outputs.url }}"
@@ -744,7 +744,7 @@ jobs:
           echo "Environment: ${{ steps.pages-deploy.outputs.environment }}"
           echo "Alias: ${{ steps.pages-deploy.outputs.alias }}"
           echo ""
-          
+
           # If deployment failed, try to get more information
           if [ "${{ steps.pages-deploy.outcome }}" = "failure" ]; then
             echo "❌ CLOUDFLARE PAGES ACTION FAILED!"
@@ -766,11 +766,11 @@ jobs:
         if: steps.pages-deploy.outcome == 'success' || success()
         run: |
           echo "=== VERIFYING DEPLOYMENT SUCCESS ==="
-          
+
           # Wait for deployment to propagate
           echo "Waiting 15 seconds for deployment propagation..."
           sleep 15
-          
+
           # Try to determine the deployment URL
           if [ -n "${{ steps.pages-deploy.outputs.url }}" ]; then
             DEPLOYMENT_URL="${{ steps.pages-deploy.outputs.url }}"
@@ -780,13 +780,13 @@ jobs:
             DEPLOYMENT_URL="https://blog.radaideh.info"
             echo "Using production domain: $DEPLOYMENT_URL"
           fi
-          
+
           # Test the deployment
           echo "Testing deployment at: $DEPLOYMENT_URL"
-          
+
           MAX_RETRIES=3
           RETRY_COUNT=0
-          
+
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL")
             
@@ -802,7 +802,7 @@ jobs:
               fi
             fi
           done
-          
+
           echo "Deployment verification completed."
 
       - name: Create KV Namespaces (if needed)
@@ -811,7 +811,7 @@ jobs:
           echo "Ensuring KV namespaces exist..."
           export CLOUDFLARE_API_TOKEN="${{ secrets.CF_API_TOKEN }}"
           export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CF_ACCOUNT_ID }}"
-          
+
           # Check if namespaces exist, create if not
           for ns in VISIT_COUNTS LIKES; do
             echo "Checking KV namespace: $ns"
@@ -865,7 +865,7 @@ jobs:
             } catch (error) {
               console.log('ready-to-deploy label not found or already removed');
             }
-            
+
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
