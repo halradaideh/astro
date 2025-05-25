@@ -140,13 +140,46 @@ jobs:
             exit 1
           fi
 
-          # Generate hash from source content, commit SHA, and build outputs
-          SOURCE_HASH=$(find src/ -type f \( -name "*.astro" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.md" -o -name "*.mdx" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          # Generate comprehensive hash that includes ALL files that could affect build
+          echo "=== Generating comprehensive build hash ==="
+
+          # 1. Source files (expanded to include all relevant types)
+          echo "Computing source files hash..."
+          SOURCE_HASH=$(find src/ -type f \( \
+            -name "*.astro" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+            -o -name "*.md" -o -name "*.mdx" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" \
+            -o -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" \
+            -o -name "*.vue" -o -name "*.svelte" -o -name "*.html" \
+          \) -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+
+          # 2. Configuration files that affect build
+          echo "Computing configuration files hash..."
+          CONFIG_HASH=$(find . -maxdepth 1 -type f \( \
+            -name "astro.config.*" -o -name "vite.config.*" -o -name "tsconfig.json" \
+            -o -name "package.json" -o -name "tailwind.config.*" -o -name "postcss.config.*" \
+            -o -name ".env*" -o -name "*.config.js" -o -name "*.config.mjs" -o -name "*.config.ts" \
+          \) -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+
+          # 3. Public assets that get copied
+          echo "Computing public assets hash..."
+          if [ -d "public/" ]; then
+            PUBLIC_HASH=$(find public/ -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
+          else
+            PUBLIC_HASH="no-public-dir"
+          fi
+
+          # 4. Build output hash
+          echo "Computing dist files hash..."
           DIST_HASH=$(find ${{ env.DIST_DIR }} -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+
+          # 5. Git commit SHA for uniqueness
           COMMIT_SHA="${{ github.sha }}"
 
+          # 6. Timestamp to ensure uniqueness for same commit (development aid)
+          TIMESTAMP=$(date +%s)
+
           # Combine all hashes for unique build identifier
-          BUILD_HASH=$(echo "${SOURCE_HASH}-${DIST_HASH}-${COMMIT_SHA}" | sha256sum | cut -d' ' -f1)
+          BUILD_HASH=$(echo "${SOURCE_HASH}-${CONFIG_HASH}-${PUBLIC_HASH}-${DIST_HASH}-${COMMIT_SHA}-${TIMESTAMP}" | sha256sum | cut -d' ' -f1)
 
           # Validate hash is not empty
           if [ -z "$BUILD_HASH" ]; then
@@ -154,9 +187,14 @@ jobs:
             exit 1
           fi
 
-          echo "Source hash: $SOURCE_HASH"
-          echo "Dist hash: $DIST_HASH"
+          echo "=== Build Hash Components ==="
+          echo "Source files hash: $SOURCE_HASH"
+          echo "Config files hash: $CONFIG_HASH" 
+          echo "Public assets hash: $PUBLIC_HASH"
+          echo "Dist output hash: $DIST_HASH"
           echo "Commit SHA: $COMMIT_SHA"
+          echo "Timestamp: $TIMESTAMP"
+          echo "=== Final Build Hash ==="
           echo "Generated build hash: $BUILD_HASH"
           echo "hash=$BUILD_HASH" >> $GITHUB_OUTPUT
 
@@ -509,9 +547,75 @@ jobs:
             echo "This indicates the prepare-release job failed or artifacts were not created"
             exit 1
           fi
+
           echo "✅ Successfully downloaded validated build artifacts"
-          echo "Artifact contents:"
+          echo "=== DEPLOYMENT DEBUGGING INFORMATION ==="
+          echo "Build hash used: ${{ needs.build-and-test.outputs.build-hash }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Workflow run ID: ${{ github.run_id }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+
+          echo "=== ARTIFACT DIRECTORY STRUCTURE ==="
           ls -la ${{ env.DIST_DIR }}
+          echo ""
+
+          echo "=== TOTAL FILE COUNT ==="
+          TOTAL_FILES=$(find ${{ env.DIST_DIR }} -type f | wc -l)
+          echo "Total files: $TOTAL_FILES"
+          echo ""
+
+          echo "=== FILE TYPES BREAKDOWN ==="
+          find ${{ env.DIST_DIR }} -type f | grep -E '\.[^.]+$' | sed 's/.*\.//' | sort | uniq -c | sort -nr
+          echo ""
+
+          echo "=== KEY FILE CHECKSUMS (for deployment verification) ==="
+          # Check key files that should change between deployments
+          if [ -f "${{ env.DIST_DIR }}/index.html" ]; then
+            echo "index.html: $(sha256sum ${{ env.DIST_DIR }}/index.html | cut -d' ' -f1)"
+          fi
+
+          if [ -d "${{ env.DIST_DIR }}/_astro" ]; then
+            echo "=== _astro directory contents ==="
+            ls -la ${{ env.DIST_DIR }}/_astro/ | head -10
+          fi
+
+          echo "=== RECENT FILE MODIFICATIONS ==="
+          find ${{ env.DIST_DIR }} -type f -exec stat -c '%Y %n' {} \; | sort -nr | head -10 | while read timestamp file; do
+            date -d "@$timestamp" '+%Y-%m-%d %H:%M:%S' | tr -d '\n'
+            echo " $file"
+          done
+
+          echo ""
+          echo "=== DEPLOYMENT READY - Proceeding to Cloudflare Pages ==="
+
+      - name: Inject deployment metadata
+        run: |
+          echo "=== INJECTING DEPLOYMENT METADATA FOR CACHE BUSTING ==="
+
+          # Create deployment metadata file
+          cat > ${{ env.DIST_DIR }}/.deployment-meta.json << EOF
+          {
+            "deploymentId": "${{ github.run_id }}-${{ github.run_number }}",
+            "commitSha": "${{ github.sha }}",
+            "buildHash": "${{ needs.build-and-test.outputs.build-hash }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "branch": "${{ github.ref_name }}",
+            "event": "${{ github.event_name }}"
+          }
+          EOF
+
+          echo "Created deployment metadata:"
+          cat ${{ env.DIST_DIR }}/.deployment-meta.json
+
+          # Update any HTML files with deployment info (for cache busting)
+          if [ -f "${{ env.DIST_DIR }}/index.html" ]; then
+            # Add deployment info as a comment in index.html for cache busting
+            sed -i "s|</head>|<!-- Deployment: ${{ github.run_id }}-${{ github.run_number }} at $(date -u +%Y-%m-%dT%H:%M:%SZ) -->\n</head>|" ${{ env.DIST_DIR }}/index.html
+            echo "✅ Added deployment metadata to index.html"
+          fi
+
+          echo "=== FINAL FILE COUNT AFTER METADATA INJECTION ==="
           echo "Total files: $(find ${{ env.DIST_DIR }} -type f | wc -l)"
 
       - name: Deploy to Cloudflare Pages
@@ -540,6 +644,65 @@ jobs:
           kv: |
             VISIT_COUNTS=${{ secrets.KV_VISIT_COUNTS_ID }}
             LIKES=${{ secrets.KV_LIKES_ID }}
+
+      - name: Verify deployment
+        if: steps.pages-deploy.outcome == 'success'
+        run: |
+          echo "=== POST-DEPLOYMENT VERIFICATION ==="
+
+          # Get the deployment URL from the Cloudflare action output
+          if [ -n "${{ steps.pages-deploy.outputs.url }}" ]; then
+            DEPLOYMENT_URL="${{ steps.pages-deploy.outputs.url }}"
+          else
+            # Fallback to preview URL format
+            DEPLOYMENT_URL="https://${{ github.sha }}.blog-radaideh-info.pages.dev"
+          fi
+
+          echo "Verifying deployment at: $DEPLOYMENT_URL"
+
+          # Wait a moment for propagation
+          echo "Waiting 10 seconds for deployment propagation..."
+          sleep 10
+
+          # Test the deployment
+          echo "=== TESTING DEPLOYMENT ==="
+
+          # Test 1: Check if site is accessible
+          if curl -f -s "$DEPLOYMENT_URL" > /dev/null; then
+            echo "✅ Site is accessible"
+          else
+            echo "❌ Site is not accessible"
+            exit 1
+          fi
+
+          # Test 2: Check for deployment metadata
+          if curl -f -s "$DEPLOYMENT_URL/.deployment-meta.json" > /dev/null; then
+            echo "✅ Deployment metadata is accessible"
+            echo "Deployment metadata content:"
+            curl -s "$DEPLOYMENT_URL/.deployment-meta.json" | jq .
+          else
+            echo "⚠️ Deployment metadata not accessible (this is expected if .deployment-meta.json is not in root)"
+          fi
+
+          # Test 3: Check for our deployment comment in index.html
+          echo "=== CHECKING FOR DEPLOYMENT MARKER ==="
+          DEPLOYMENT_MARKER="Deployment: ${{ github.run_id }}-${{ github.run_number }}"
+          if curl -s "$DEPLOYMENT_URL" | grep -q "$DEPLOYMENT_MARKER"; then
+            echo "✅ Found deployment marker in deployed site"
+            echo "This confirms that fresh content was deployed!"
+          else
+            echo "❌ Deployment marker not found in deployed site"
+            echo "This suggests old content is still being served"
+            echo "Expected marker: $DEPLOYMENT_MARKER"
+            echo ""
+            echo "Actual page content (first 500 chars):"
+            curl -s "$DEPLOYMENT_URL" | head -c 500
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ DEPLOYMENT VERIFICATION SUCCESSFUL"
+          echo "Fresh content has been successfully deployed and is live!"
 
       - name: Create KV Namespaces
         if: steps.pages-deploy.outcome == 'success'
