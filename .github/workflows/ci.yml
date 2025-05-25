@@ -64,7 +64,7 @@ jobs:
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-hit }}
       build-hash: ${{ steps.build-hash.outputs.hash }}
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -159,7 +159,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ready-to-test') || 
       contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
       github.event_name == 'push'
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -179,7 +179,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ready-to-test') || 
       contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
       github.event_name == 'push'
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -211,7 +211,7 @@ jobs:
 
       - name: Serve site
         run: npm run preview &
-        
+
       - name: Wait for server
         run: sleep 10
 
@@ -235,7 +235,7 @@ jobs:
     outputs:
       new_version: ${{ steps.versioning.outputs.new_version }}
       release_id: ${{ steps.create_release.outputs.release_id }}
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -476,7 +476,7 @@ jobs:
     needs: [deploy]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Cleanup old artifacts
         uses: actions/github-script@v7
@@ -487,7 +487,7 @@ jobs:
               repo: context.repo.repo,
               run_id: context.runId,
             });
-            
+
             for (const artifact of artifacts.data.artifacts) {
               if (artifact.name.startsWith('dist-')) {
                 await github.rest.actions.deleteArtifact({

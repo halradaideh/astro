@@ -29,7 +29,7 @@ class Monitoring {
   }
 
   // Error tracking
-  reportError(error: Error, context?: Record<string, any>): void {
+  reportError(error: Error, context?: Record<string, unknown>): void {
     const errorReport: ErrorReport = {
       message: error.message,
       stack: error.stack,
@@ -40,10 +40,10 @@ class Monitoring {
     };
 
     this.errors.push(errorReport);
-    
+
     // Send to monitoring service (implement based on your monitoring solution)
     this.sendErrorToService(errorReport);
-    
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Error reported:', errorReport);
@@ -76,8 +76,9 @@ class Monitoring {
       // First Input Delay
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          this.recordMetric('FID', entry.processingStart - entry.startTime);
+        entries.forEach((entry) => {
+          const fidEntry = entry as PerformanceEntry & { processingStart: number };
+          this.recordMetric('FID', fidEntry.processingStart - fidEntry.startTime);
         });
       }).observe({ entryTypes: ['first-input'] });
 
@@ -85,9 +86,10 @@ class Monitoring {
       let clsValue = 0;
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+        entries.forEach((entry) => {
+          const clsEntry = entry as PerformanceEntry & { hadRecentInput: boolean; value: number };
+          if (!clsEntry.hadRecentInput) {
+            clsValue += clsEntry.value;
           }
         });
         this.recordMetric('CLS', clsValue);
@@ -157,4 +159,4 @@ export function setupGlobalErrorHandling(): void {
   monitoring.trackWebVitals();
 }
 
-export default Monitoring; 
+export default Monitoring;

@@ -103,23 +103,23 @@ npm run setup-env help     # Show all available options
 
 ### Required Environment Variables
 
-| Variable | Description | Development Default | Production |
-|----------|-------------|--------------------|-----------| 
-| `SITE_URL` | Production site URL | `https://blog.radaideh.info` | **Required** |
-| `DEV_URL` | Development server URL | `http://localhost:4321` | **Required** |
-| `DEV_PORT` | Development server port | `4321` | **Required** |
-| `GISCUS_REPO` | GitHub repository for comments | `halradaideh/astro` | **Required** |
-| `GISCUS_REPO_ID` | Giscus repository ID | Real ID | **Required** |
-| `GISCUS_CATEGORY` | Giscus discussion category | `General` | **Required** |
-| `GISCUS_CATEGORY_ID` | Giscus category ID | Real ID | **Required** |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token | Dev-safe placeholder | **Required** |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID | Dev-safe placeholder | **Required** |
-| `RATE_LIMIT_REQUESTS` | Rate limit per window | `60` | **Required** |
-| `RATE_LIMIT_WINDOW` | Rate limit window (seconds) | `60` | **Required** |
-| `SESSION_SECRET` | Session secret key | Dev-safe string | **Required** |
-| `ENABLE_SECURITY_HEADERS` | Enable security headers | `true` | **Required** |
-| `MAX_REQUEST_SIZE` | Maximum request size | `10mb` | **Required** |
-| `ALLOWED_UPLOAD_TYPES` | Allowed upload types | Image types | **Required** |
+| Variable                  | Description                    | Development Default          | Production   |
+| ------------------------- | ------------------------------ | ---------------------------- | ------------ |
+| `SITE_URL`                | Production site URL            | `https://blog.radaideh.info` | **Required** |
+| `DEV_URL`                 | Development server URL         | `http://localhost:4321`      | **Required** |
+| `DEV_PORT`                | Development server port        | `4321`                       | **Required** |
+| `GISCUS_REPO`             | GitHub repository for comments | `halradaideh/astro`          | **Required** |
+| `GISCUS_REPO_ID`          | Giscus repository ID           | Real ID                      | **Required** |
+| `GISCUS_CATEGORY`         | Giscus discussion category     | `General`                    | **Required** |
+| `GISCUS_CATEGORY_ID`      | Giscus category ID             | Real ID                      | **Required** |
+| `CLOUDFLARE_API_TOKEN`    | Cloudflare API token           | Dev-safe placeholder         | **Required** |
+| `CLOUDFLARE_ACCOUNT_ID`   | Cloudflare account ID          | Dev-safe placeholder         | **Required** |
+| `RATE_LIMIT_REQUESTS`     | Rate limit per window          | `60`                         | **Required** |
+| `RATE_LIMIT_WINDOW`       | Rate limit window (seconds)    | `60`                         | **Required** |
+| `SESSION_SECRET`          | Session secret key             | Dev-safe string              | **Required** |
+| `ENABLE_SECURITY_HEADERS` | Enable security headers        | `true`                       | **Required** |
+| `MAX_REQUEST_SIZE`        | Maximum request size           | `10mb`                       | **Required** |
+| `ALLOWED_UPLOAD_TYPES`    | Allowed upload types           | Image types                  | **Required** |
 
 ## 🛠️ Development
 
@@ -135,12 +135,14 @@ npm run setup-env help     # Show all available options
 The project includes Docker support for a consistent, isolated development environment:
 
 #### Benefits:
+
 - **Environment Consistency**: Same Node.js version across all machines
 - **No Local Dependencies**: No need to install Node.js locally
 - **Isolation**: Prevents conflicts with other projects
 - **Easy Cleanup**: Remove container without affecting host system
 
 #### Docker Commands:
+
 ```bash
 # One-command development (builds and runs)
 npm run dev:docker
@@ -155,6 +157,7 @@ docker exec -it astro-blog-dev sh
 ```
 
 #### Features:
+
 - **Live Reloading**: Source code changes reflect immediately
 - **Port Mapping**: Accessible at `http://localhost:4321`
 - **Volume Mounting**: Real-time file synchronization
@@ -251,16 +254,19 @@ This blog's design and structure were created with the assistance of Claude AI, 
 This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.
 
 ### You are free to:
+
 - ✅ **Personal Use**: Use this code for your personal blog or portfolio
 - ✅ **Educational Use**: Learn from and modify the code
 - ✅ **Share**: Copy and redistribute the code
 - ✅ **Adapt**: Remix, transform, and build upon the code
 
 ### Under the following terms:
+
 - 📝 **Attribution**: You must give appropriate credit and link to this repository
 - 🚫 **Non-Commercial**: You may not use this for commercial purposes
 
 ### Commercial Use
+
 For commercial licensing, please contact [Hamdan Radaideh](https://github.com/halradaideh) to discuss terms.
 
 **License**: [CC BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/)
@@ -295,13 +301,13 @@ For commercial licensing, please contact [Hamdan Radaideh](https://github.com/ha
    ```bash
    # Create production environment
    npm run setup-env:prod
-   
+
    # Edit .env with your actual values:
    # - SITE_URL: Your production domain
    # - GISCUS_*: Your GitHub repository settings
    # - CLOUDFLARE_*: Your actual Cloudflare credentials
    # - SESSION_SECRET: A secure random string (32+ chars)
-   
+
    # Validate configuration
    npm run validate-env
    ```
@@ -316,7 +322,7 @@ For commercial licensing, please contact [Hamdan Radaideh](https://github.com/ha
 3. **Required Cloudflare Settings**
 
    Set these environment variables in your Cloudflare Pages dashboard:
-   
+
    ```bash
    # Copy all variables from your .env file
    SITE_URL=your_production_url
@@ -358,6 +364,7 @@ SESSION_SECRET=your_secure_session_secret
 Common issues and solutions:
 
 1. **Environment Validation Failures**
+
    ```bash
    npm run validate-env    # Check specific errors
    npm run setup-env:dev   # Reset to development defaults
@@ -365,19 +372,21 @@ Common issues and solutions:
    ```
 
 2. **Development Server Issues**
+
    ```bash
    # The dev server includes automatic validation
    npm run dev             # Validates before starting
-   
+
    # If validation fails, check your .env file
    npm run validate-env    # Get detailed error messages
    ```
 
 3. **Deployment Issues**
+
    ```bash
    # Verify all environment variables are set
    npm run validate-env
-   
+
    # Check build locally
    npm run build
    npm run preview

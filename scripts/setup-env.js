@@ -16,13 +16,13 @@ const SECURITY_VARS = [
   'SESSION_SECRET',
   'ENABLE_SECURITY_HEADERS',
   'MAX_REQUEST_SIZE',
-  'ALLOWED_UPLOAD_TYPES'
+  'ALLOWED_UPLOAD_TYPES',
 ];
 
 // Required environment variables
 const REQUIRED_VARS = [
   'SITE_URL',
-  'DEV_URL', 
+  'DEV_URL',
   'DEV_PORT',
   'GISCUS_REPO',
   'GISCUS_REPO_ID',
@@ -32,7 +32,7 @@ const REQUIRED_VARS = [
   'CLOUDFLARE_ACCOUNT_ID',
   'RATE_LIMIT_REQUESTS',
   'RATE_LIMIT_WINDOW',
-  ...SECURITY_VARS
+  ...SECURITY_VARS,
 ];
 
 // Development configuration template
@@ -74,7 +74,7 @@ function validateEnv() {
   const envContent = fs.readFileSync(envPath, 'utf8');
   const envVars = {};
 
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line) => {
     line = line.trim();
     if (line && !line.startsWith('#')) {
       const [key, ...valueParts] = line.split('=');
@@ -88,12 +88,18 @@ function validateEnv() {
   const missing = [];
   const invalid = [];
 
-  REQUIRED_VARS.forEach(varName => {
+  REQUIRED_VARS.forEach((varName) => {
     const value = envVars[varName];
-    
+
     if (!value) {
       missing.push(varName);
-    } else if (value === 'your-api-token' || value === 'your-account-id' || value === 'your-repo-id' || value === 'your-category-id' || value === 'your-session-secret-key-min-32-chars') {
+    } else if (
+      value === 'your-api-token' ||
+      value === 'your-account-id' ||
+      value === 'your-repo-id' ||
+      value === 'your-category-id' ||
+      value === 'your-session-secret-key-min-32-chars'
+    ) {
       invalid.push(varName);
     } else if (varName === 'SITE_URL' || varName === 'DEV_URL') {
       try {
@@ -107,17 +113,17 @@ function validateEnv() {
   // Report results
   if (missing.length > 0 || invalid.length > 0) {
     console.error('❌ Environment validation failed!');
-    
+
     if (missing.length > 0) {
       console.error('\n🚫 Missing variables:');
-      missing.forEach(varName => console.error(`  - ${varName}`));
+      missing.forEach((varName) => console.error(`  - ${varName}`));
     }
-    
+
     if (invalid.length > 0) {
       console.error('\n⚠️  Invalid/placeholder values:');
-      invalid.forEach(varName => console.error(`  - ${varName}`));
+      invalid.forEach((varName) => console.error(`  - ${varName}`));
     }
-    
+
     console.log('\n💡 Update your .env file with proper values.');
     return false;
   }
@@ -177,7 +183,7 @@ switch (command) {
       console.log('🔄 Creating backup and replacing with development configuration...');
       fs.copyFileSync(envPath, `${envPath}.backup.${Date.now()}`);
     }
-    
+
     if (createEnvFromTemplate(DEV_ENV_TEMPLATE, 'with development configuration')) {
       console.log('🎉 Development environment ready!');
       console.log('📋 This configuration includes:');
@@ -197,8 +203,10 @@ switch (command) {
       console.log('💡 Delete .env first or use a different command.');
       process.exit(1);
     }
-    
-    if (createEnvFromTemplate(fs.readFileSync(envExamplePath, 'utf8'), 'from production template')) {
+
+    if (
+      createEnvFromTemplate(fs.readFileSync(envExamplePath, 'utf8'), 'from production template')
+    ) {
       console.log('📝 Please update the values in .env with your actual configuration:');
       console.log('  - SITE_URL: Your production blog URL');
       console.log('  - GISCUS_*: Your GitHub repository settings');
@@ -219,7 +227,7 @@ switch (command) {
     // Default behavior: smart setup
     if (fs.existsSync(envPath)) {
       console.log('⚠️  .env file already exists.');
-      
+
       // Validate existing file
       if (validateEnv()) {
         console.log('🎉 Your environment is properly configured!');
@@ -248,4 +256,4 @@ switch (command) {
       }
     }
     break;
-} 
+}

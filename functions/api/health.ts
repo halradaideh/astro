@@ -15,7 +15,7 @@ interface HealthResponse {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const startTime = Date.now();
-  
+
   if (request.method !== 'GET') {
     return new Response('Method Not Allowed', { status: 405 });
   }
@@ -70,4 +70,4 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
     );
   }
-}; 
+};

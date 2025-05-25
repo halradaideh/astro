@@ -49,23 +49,23 @@ jobs:
           title: '⬆️ Automated Dependency Updates'
           body: |
             ## Automated Dependency Updates
-            
+
             This PR updates dependencies to their latest versions.
-            
+
             ### Changes
             - Updated npm packages to latest versions
             - All tests pass
             - Build successful
-            
+
             ### Verification
             - ✅ Linting passes
             - ✅ Type checking passes  
             - ✅ Tests pass
             - ✅ Build successful
-            
+
             **Please review the changes before merging.**
           branch: automated-dependency-updates
           delete-branch: true
           labels: |
             dependencies
-            automated 
+            automated
