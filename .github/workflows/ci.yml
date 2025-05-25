@@ -226,8 +226,7 @@ jobs:
           echo "Expected artifact name: dist-${{ needs.build-and-test.outputs.build-hash }}"
           echo "Dist directory: ${{ env.DIST_DIR }}"
 
-      - name: Setup Node.js with caching (if needed)
-        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -257,6 +256,14 @@ jobs:
           path: ${{ env.DIST_DIR }}
         continue-on-error: true
         id: download-artifacts
+
+      - name: Setup Node.js with caching (if needed)
+        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
+          cache: 'npm'
 
       - name: Force fresh build for ALL deployments
         if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
@@ -487,44 +494,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Reuse the same build artifacts from earlier
-      - name: Download build artifacts
+      # Use ONLY the validated artifacts from prepare-release - NO rebuilding
+      - name: Download validated build artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist-${{ needs.build-and-test.outputs.build-hash }}
           path: ${{ env.DIST_DIR }}
-        continue-on-error: true
         id: download-artifacts
 
-      - name: Setup Node.js with caching (if needed)
-        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          check-latest: true
-          cache: 'npm'
-
-      - name: Force fresh build for ALL deployments
-        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "Main branch detected - forcing fresh build to ensure latest code"
-          elif [[ "${{ github.event.pull_request.labels.*.name }}" == *"ready-to-deploy"* ]]; then
-            echo "PR deployment detected - forcing fresh build to ensure latest code"
-          else
-            echo "Artifacts not available, building locally..."
-          fi
-          npm install -g npm@${{ env.NPM_VERSION }}
-          npm ci --install-links
-          npm run build
-          echo "Fresh build completed for commit: ${{ github.sha }}"
-
-      - name: Verify dist directory
+      - name: Verify artifacts were downloaded
         run: |
           if [ ! -d "${{ env.DIST_DIR }}" ] || [ -z "$(ls -A ${{ env.DIST_DIR }})" ]; then
-            echo "Error: Dist directory is empty or doesn't exist after build/download"
+            echo "❌ ERROR: Build artifacts not available from prepare-release job"
+            echo "This indicates the prepare-release job failed or artifacts were not created"
             exit 1
           fi
+          echo "✅ Successfully downloaded validated build artifacts"
+          echo "Artifact contents:"
+          ls -la ${{ env.DIST_DIR }}
+          echo "Total files: $(find ${{ env.DIST_DIR }} -type f | wc -l)"
 
       - name: Deploy to Cloudflare Pages
         id: pages-deploy
