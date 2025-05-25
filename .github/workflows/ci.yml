@@ -226,7 +226,8 @@ jobs:
           echo "Expected artifact name: dist-${{ needs.build-and-test.outputs.build-hash }}"
           echo "Dist directory: ${{ env.DIST_DIR }}"
 
-      - name: Setup Node.js with caching
+      - name: Setup Node.js with caching (if needed)
+        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -257,19 +258,13 @@ jobs:
         continue-on-error: true
         id: download-artifacts
 
-      - name: Setup Node.js with caching (if needed)
-        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          check-latest: true
-          cache: 'npm'
-
-      - name: Force fresh build for main branch or fallback build
-        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
+      - name: Force fresh build for ALL deployments
+        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Main branch detected - forcing fresh build to ensure latest code"
+          elif [[ "${{ github.event.pull_request.labels.*.name }}" == *"ready-to-deploy"* ]]; then
+            echo "PR deployment detected - forcing fresh build to ensure latest code"
           else
             echo "Artifacts not available, building locally..."
           fi
@@ -502,18 +497,20 @@ jobs:
         id: download-artifacts
 
       - name: Setup Node.js with caching (if needed)
-        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
+        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'npm'
 
-      - name: Force fresh build for main branch or fallback build
-        if: steps.download-artifacts.outcome == 'failure' || github.ref == 'refs/heads/main'
+      - name: Force fresh build for ALL deployments
+        if: steps.download-artifacts.outcome == 'failure' || contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') || github.ref == 'refs/heads/main'
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Main branch detected - forcing fresh build to ensure latest code"
+          elif [[ "${{ github.event.pull_request.labels.*.name }}" == *"ready-to-deploy"* ]]; then
+            echo "PR deployment detected - forcing fresh build to ensure latest code"
           else
             echo "Artifacts not available, building locally..."
           fi
