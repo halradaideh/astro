@@ -4,9 +4,17 @@
 
 ```bash
 npm run validate-env                    # REQUIRED: Environment validation
-npm run lint && npm run typecheck       # REQUIRED: Code quality check
-npm run test                           # REQUIRED: Test validation
+npm run pre-commit                      # REQUIRED: Full validation (format, lint, type, build)
 git status && git branch               # REQUIRED: Current state check
+```
+
+## 🔧 PRE-COMMIT VALIDATION COMMANDS
+
+```bash
+npm run pre-commit                      # Full validation: format:check + lint + typecheck + build
+npm run pre-commit:fix                  # Auto-fix formatting + lint issues + validation
+npm run format:check                    # Check code formatting only
+npm run format                          # Fix code formatting issues
 ```
 
 ## 🔄 STANDARD WORKFLOW COMMANDS
@@ -18,8 +26,8 @@ git checkout -b {type}/{scope}/{description}
 # 2. IMPLEMENT CHANGES
 # ... make code changes ...
 
-# 3. VALIDATE IMPLEMENTATION
-npm run lint && npm run typecheck && npm run test && npm run build
+# 3. VALIDATE IMPLEMENTATION (MANDATORY)
+npm run pre-commit
 
 # 4. COMMIT (use exact format)
 git add .
@@ -134,13 +142,21 @@ git add . && git commit --amend --no-edit && git push --force-with-lease
 Execute in order (all must return exit code 0):
 
 - [ ] `npm run validate-env`
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run test`
-- [ ] `npm run build`
+- [ ] `npm run pre-commit` (includes format:check, lint, typecheck, build)
 - [ ] Branch name format: `{type}/{scope}/{description}`
 - [ ] Commit format: `{type}({scope}): {description}`
 - [ ] All required PR labels added
+
+## 🚨 ERROR RECOVERY FOR FORMATTING
+
+```bash
+# If format:check fails during pre-commit:
+npm run format                         # Auto-fix formatting issues
+npm run pre-commit                     # Re-run full validation
+
+# Or use the combined command:
+npm run pre-commit:fix                 # Auto-fix + validate everything
+```
 
 ## 📊 STATUS CODES
 

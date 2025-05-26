@@ -22,18 +22,23 @@ When making any code changes:
 1. **Pre-flight checks:**
    ```bash
    npm run validate-env
-   npm run lint && npm run typecheck && npm run test
+   npm run pre-commit
    ```
 
 2. **Branch creation:**
    - Use format: `{type}/{scope}/{kebab-case-description}`
    - Types: feat, fix, refactor, perf, docs, test, ci, chore, hotfix
 
-3. **Commit format:**
+3. **Pre-commit validation (MANDATORY):**
+   - Run `npm run pre-commit` before every commit
+   - If formatting fails, run `npm run pre-commit:fix` to auto-fix issues
+   - All validation must pass: format:check, lint, typecheck, build
+
+4. **Commit format:**
    - Use: `{type}({scope}): {description}`
    - Follow conventional commits specification
 
-4. **PR creation:**
+5. **PR creation:**
    - **MANDATORY**: Include `ready-to-test` label on ALL new PRs
    - Include all required labels: `ready-to-test`, type, size, priority
    - Use the PR template from `.github/pull_request_template.md`
@@ -49,15 +54,18 @@ When making any code changes:
 
 Before suggesting any code changes, verify:
 - [ ] Environment is properly configured
-- [ ] All tests pass
-- [ ] Linting passes
-- [ ] TypeScript compilation succeeds
-- [ ] Build completes successfully
+- [ ] Code formatting passes (`npm run format:check`)
+- [ ] Linting passes (`npm run lint`)
+- [ ] TypeScript compilation succeeds (`npm run typecheck`)
+- [ ] Build completes successfully (`npm run build`)
+- [ ] Full pre-commit validation passes (`npm run pre-commit`)
 
 ## 🔒 CRITICAL CONSTRAINTS
 
 **NEVER:**
 - Skip environment validation
+- Skip pre-commit validation (`npm run pre-commit`)
+- Commit code with formatting issues
 - Use incorrect naming conventions
 - Create PRs without required labels
 - Merge without CI validation
@@ -65,6 +73,8 @@ Before suggesting any code changes, verify:
 
 **ALWAYS:**
 - Follow exact protocols from `.github/AI_AGENT_QUICKREF.md`
+- Run `npm run pre-commit` before every commit
+- Use `npm run pre-commit:fix` to auto-fix formatting issues
 - Include `ready-to-test` label on ALL new PRs
 - Include proper error handling
 - Validate changes before committing
