@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
+import React from 'react';
 
 const stages = [
   {
@@ -52,31 +51,18 @@ const stages = [
 ];
 
 export const Pipeline = () => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0 }}
-      animate={inView ? { opacity: 1 } : {}}
-      transition={{ duration: 0.8 }}
-      className="pipeline"
-    >
+    <div className="pipeline">
       <div className="pipeline-container">
         {stages.map((stage, index) => (
-          <motion.div
+          <div
             key={stage.title}
             className="pipeline-stage"
-            initial={{ x: 20, opacity: 0 }}
-            animate={inView ? { x: 0, opacity: 1 } : {}}
-            transition={{ delay: index * 0.2, duration: 0.5 }}
             style={{
               backgroundColor: `${stage.color}08`,
               border: `1px solid ${stage.color}20`,
               boxShadow: 'none',
+              animationDelay: `${index * 100}ms`,
             }}
           >
             <div className="stage-content">
@@ -118,14 +104,35 @@ export const Pipeline = () => {
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
       <style>{`
+        @keyframes fadeInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
         .pipeline {
           width: 100%;
           margin: 1.5rem 0;
           padding: 0;
+          animation: fadeIn 0.5s ease forwards;
         }
         
         .pipeline-container {
@@ -142,6 +149,8 @@ export const Pipeline = () => {
           position: relative;
           transition: all 0.3s ease;
           backdrop-filter: blur(8px);
+          animation: fadeInRight 0.5s ease forwards;
+          animation-fill-mode: both;
         }
         
         .stage-content {
@@ -255,6 +264,6 @@ export const Pipeline = () => {
           }
         }
       `}</style>
-    </motion.div>
+    </div>
   );
 };

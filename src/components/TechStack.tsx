@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
+import React from 'react';
 
 interface LayerProps {
   title: string;
@@ -11,52 +10,42 @@ interface LayerProps {
   delay: number;
 }
 
-const Layer = ({ title, items, delay }: LayerProps) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5, delay }}
-    className="layer"
-  >
-    <div className="layer-title">{title}</div>
-    <div className="layer-content">
-      {items.map((item, index) => (
-        <motion.div
-          key={item.name}
-          className="tech-item"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: delay + index * 0.1 }}
-          style={{
-            backgroundColor: `${item.color}15`,
-            border: `1px solid ${item.color}40`,
-            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
-          }}
-        >
+const Layer = ({ title, items, delay }: LayerProps) => {
+  return (
+    <div className="layer" style={{ animationDelay: `${delay * 200}ms` }}>
+      <div className="layer-title">{title}</div>
+      <div className="layer-content">
+        {items.map((item, index) => (
           <div
-            className="tech-header"
+            key={item.name}
+            className="tech-item"
             style={{
-              color: '#6366f1',
-              borderBottom: `2px solid ${item.color}`,
-              paddingBottom: '4px',
-              fontWeight: '700',
+              backgroundColor: `${item.color}15`,
+              border: `1px solid ${item.color}40`,
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
+              animationDelay: `${delay * 200 + index * 100}ms`,
             }}
           >
-            {item.name}
+            <div
+              className="tech-header"
+              style={{
+                color: '#6366f1',
+                borderBottom: `2px solid ${item.color}`,
+                paddingBottom: '4px',
+                fontWeight: '700',
+              }}
+            >
+              {item.name}
+            </div>
+            <div className="tech-description">{item.description}</div>
           </div>
-          <div className="tech-description">{item.description}</div>
-        </motion.div>
-      ))}
+        ))}
+      </div>
     </div>
-  </motion.div>
-);
+  );
+};
 
 export const TechStack = () => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
   const layers = [
     {
       title: 'Frontend',
@@ -106,14 +95,42 @@ export const TechStack = () => {
   ];
 
   return (
-    <motion.div
-      ref={ref}
-      className="tech-stack"
-      initial={{ opacity: 0 }}
-      animate={inView ? { opacity: 1 } : {}}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="tech-stack">
+      {layers.map((layer, index) => (
+        <Layer key={layer.title} {...layer} delay={index} />
+      ))}
       <style>{`
+        @keyframes fadeInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
         .tech-stack {
           padding: 1.5rem;
           background: var(--code-bg);
@@ -123,12 +140,15 @@ export const TechStack = () => {
           gap: 1.5rem;
           position: relative;
           color: #000000;
+          animation: fadeIn 0.5s ease forwards;
         }
 
         .layer {
           display: flex;
           gap: 1rem;
           align-items: flex-start;
+          animation: fadeInLeft 0.5s ease forwards;
+          animation-fill-mode: both;
         }
 
         .layer-title {
@@ -151,9 +171,11 @@ export const TechStack = () => {
           border-radius: 8px;
           min-width: 180px;
           flex: 1;
-          transition: all 0.2s ease;
+          transition: all 0.3s ease;
           position: relative;
           background-color: var(--bg);
+          animation: fadeInUp 0.3s ease forwards;
+          animation-fill-mode: both;
         }
 
         .tech-item:hover {
@@ -202,9 +224,6 @@ export const TechStack = () => {
           }
         }
       `}</style>
-      {layers.map((layer, index) => (
-        <Layer key={layer.title} title={layer.title} items={layer.items} delay={index * 0.2} />
-      ))}
-    </motion.div>
+    </div>
   );
 };
