@@ -1,0 +1,428 @@
+---
+interface Props {
+  path: string;
+}
+
+const { path } = Astro.props;
+---
+
+<div class="floating-stats" data-path={path}>
+  <div class="stat">
+    <span role="img" aria-label="views">👀</span>
+    <span class="views-count">0</span>
+  </div>
+
+  <div class="stat">
+    <button class="like-button" aria-label="Like post">
+      <span role="img" aria-label="like">♡</span>
+    </button>
+    <button class="count-button">
+      <span class="likes-count">0</span>
+    </button>
+  </div>
+
+  <div class="like-details" style="display: none;">
+    <div class="like-details-header">
+      Liked by:
+      <button class="close-button" aria-label="Close likes details">×</button>
+    </div>
+    <div class="user-list"></div>
+  </div>
+</div>
+
+<style>
+  .floating-stats {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    opacity: 1;
+  }
+
+  .floating-stats.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .floating-stats:hover {
+    transform: translateY(-2px);
+  }
+
+  .stat {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    padding: 0.25rem;
+    min-height: 32px;
+    width: 100%;
+  }
+
+  .stat span[role='img'] {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .stat > span:last-child,
+  .count-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 1.5rem;
+  }
+
+  .like-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: inherit;
+    opacity: 1;
+    font-size: 1.2rem;
+    line-height: 1;
+    width: auto;
+  }
+
+  .count-button {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .count-button:not(:disabled):hover {
+    opacity: 0.7;
+  }
+
+  .count-button.active {
+    opacity: 0.7;
+  }
+
+  .like-button:disabled,
+  .count-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .like-button:not(:disabled):hover {
+    transform: scale(1.1);
+  }
+
+  .like-button.liked {
+    color: #ff4b4b !important;
+  }
+
+  .like-details {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 1rem);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 101;
+  }
+
+  .like-details-header {
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    color: #666;
+  }
+
+  .close-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .user-list {
+    padding: 0.5rem;
+  }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .user-item:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  @media (max-width: 768px) {
+    .floating-stats {
+      bottom: 1rem;
+      right: 1rem;
+      min-width: 80px;
+    }
+
+    .like-details {
+      width: 180px;
+    }
+  }
+</style>
+
+<script>
+  interface ApiResponse {
+    total?: number;
+    count?: number;
+    users?: GitHubUser[];
+    error?: string;
+  }
+
+  interface GitHubUser {
+    login: string;
+    avatar_url: string;
+  }
+
+  class FloatingStats {
+    private container: HTMLElement;
+    private path: string;
+    private viewsElement: HTMLElement;
+    private likesElement: HTMLElement;
+    private likeButton: HTMLButtonElement;
+    private countButton: HTMLButtonElement;
+    private likeDetails: HTMLElement;
+    private userList: HTMLElement;
+    private closeButton: HTMLButtonElement;
+    private isLiked = false;
+    private isLoading = true;
+
+    constructor(container: HTMLElement) {
+      this.container = container;
+      this.path = container.dataset.path || '';
+
+      // Get DOM elements
+      this.viewsElement = container.querySelector('.views-count') as HTMLElement;
+      this.likesElement = container.querySelector('.likes-count') as HTMLElement;
+      this.likeButton = container.querySelector('.like-button') as HTMLButtonElement;
+      this.countButton = container.querySelector('.count-button') as HTMLButtonElement;
+      this.likeDetails = container.querySelector('.like-details') as HTMLElement;
+      this.userList = container.querySelector('.user-list') as HTMLElement;
+      this.closeButton = container.querySelector('.close-button') as HTMLButtonElement;
+
+      this.init();
+    }
+
+    private async init() {
+      if (!this.path) return;
+
+      // Set loading state
+      this.setLoading(true);
+
+      // Bind event listeners
+      this.likeButton.addEventListener('click', () => this.handleLike());
+      this.countButton.addEventListener('click', () => this.toggleLikeDetails());
+      this.closeButton.addEventListener('click', () => this.hideLikeDetails());
+
+      // Fetch initial data
+      await this.fetchData();
+    }
+
+    private setLoading(loading: boolean) {
+      this.isLoading = loading;
+      this.container.classList.toggle('loading', loading);
+      this.likeButton.disabled = loading;
+      this.countButton.disabled = loading;
+    }
+
+    private async fetchData() {
+      try {
+        // Fetch views
+        await this.fetchViews();
+
+        // Fetch likes
+        await this.fetchLikes();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        this.setLoading(false);
+      }
+    }
+
+    private async fetchViews() {
+      try {
+        const response = await fetch(`/api/visit-counter${this.path}`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          const data = (await response.json()) as ApiResponse;
+          if (data && typeof data.total === 'number') {
+            this.viewsElement.textContent = data.total.toString();
+          }
+        }
+      } catch (error) {
+        console.warn('Error fetching views:', error);
+      }
+    }
+
+    private async fetchLikes() {
+      try {
+        const response = await fetch(`/api/likes${this.path}`);
+
+        if (response.ok) {
+          const data = (await response.json()) as ApiResponse;
+          if (data && typeof data.count === 'number') {
+            this.likesElement.textContent = data.count.toString();
+
+            if (Array.isArray(data.users)) {
+              this.updateUserList(data.users);
+
+              // Check if current user has liked
+              const currentUser = await this.getCurrentUser();
+              if (currentUser && data.users.some((user) => user?.login === currentUser.login)) {
+                this.setLiked(true);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error fetching likes:', error);
+      }
+    }
+
+    private async getCurrentUser() {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (response.ok) {
+          const data = (await response.json()) as { login?: string };
+          return data?.login ? { login: data.login } : null;
+        }
+      } catch {
+        // Ignore auth errors
+      }
+      return null;
+    }
+
+    private async handleLike() {
+      if (this.isLoading) return;
+
+      try {
+        const response = await fetch(`/api/likes${this.path}`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          const data = (await response.json()) as ApiResponse;
+          if (data && typeof data.count === 'number') {
+            this.likesElement.textContent = data.count.toString();
+            this.setLiked(!this.isLiked);
+
+            if (Array.isArray(data.users)) {
+              this.updateUserList(data.users);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error updating like:', error);
+      }
+    }
+
+    private setLiked(liked: boolean) {
+      this.isLiked = liked;
+      this.likeButton.classList.toggle('liked', liked);
+      const heartIcon = this.likeButton.querySelector('span[role="img"]');
+      if (heartIcon) {
+        heartIcon.textContent = liked ? '❤️' : '♡';
+      }
+      this.likeButton.setAttribute('aria-label', liked ? 'Unlike post' : 'Like post');
+    }
+
+    private updateUserList(users: GitHubUser[]) {
+      this.userList.innerHTML = '';
+
+      users.forEach((user) => {
+        if (user?.login) {
+          const userItem = document.createElement('div');
+          userItem.className = 'user-item';
+
+          userItem.innerHTML = `
+            <img src="${user.avatar_url || ''}" alt="${user.login}" class="user-avatar" 
+                 onerror="this.style.display='none'">
+            <span class="user-name">${user.login}</span>
+          `;
+
+          this.userList.appendChild(userItem);
+        }
+      });
+
+      // Enable/disable count button based on user list
+      this.countButton.disabled = this.isLoading || users.length === 0;
+    }
+
+    private toggleLikeDetails() {
+      const isVisible = this.likeDetails.style.display !== 'none';
+      this.likeDetails.style.display = isVisible ? 'none' : 'block';
+      this.countButton.classList.toggle('active', !isVisible);
+    }
+
+    private hideLikeDetails() {
+      this.likeDetails.style.display = 'none';
+      this.countButton.classList.remove('active');
+    }
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const containers = document.querySelectorAll('.floating-stats');
+    containers.forEach((container) => {
+      new FloatingStats(container as HTMLElement);
+    });
+  });
+</script>

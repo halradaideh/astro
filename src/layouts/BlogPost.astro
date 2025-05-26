@@ -4,7 +4,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Navigation.astro';
 import Footer from '../components/Footer.astro';
 import Comments from '../components/Comments.astro';
-import FloatingStats from '../components/FloatingStats';
+import FloatingStats from '../components/FloatingStats.astro';
 import ThemeScript from '../components/ThemeScript.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
@@ -74,7 +74,7 @@ const formatISODate = (date: Date | string | undefined) => {
           </div>
         </article>
       </main>
-      <FloatingStats path={currentPath} client:only="react" />
+      <FloatingStats path={currentPath} />
       <Footer />
     </div>
     <style>
