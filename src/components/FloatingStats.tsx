@@ -5,12 +5,20 @@ interface FloatingStatsProps {
   path: string;
 }
 
+interface GitHubUser {
+  login: string;
+  avatar_url: string;
+}
+
 interface LikeData {
   count: number;
-  users: Array<{
-    login: string;
-    avatar_url: string;
-  }>;
+  users: GitHubUser[];
+}
+
+interface LikeApiResponse {
+  count?: number;
+  users?: GitHubUser[];
+  error?: string;
 }
 
 const defaultLikeData: LikeData = {
@@ -36,30 +44,46 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
       setIsLoading(true);
       try {
         // Fetch views
-        const viewResponse = await fetch(`/api/visit-counter${path}`, {
-          method: 'POST',
-        }).catch(() => null);
+        try {
+          const viewResponse = await fetch(`/api/visit-counter${path}`, {
+            method: 'POST',
+          });
 
-        if (viewResponse?.ok) {
-          const data = (await viewResponse.json()) as { total: number };
-          setViews(data.total);
+          if (viewResponse?.ok) {
+            const data = (await viewResponse.json()) as { total?: number; error?: string };
+            if (data && typeof data.total === 'number') {
+              setViews(data.total);
+            }
+          } else {
+            console.warn('Failed to fetch views:', viewResponse?.status);
+          }
+        } catch (error) {
+          console.warn('Error fetching views:', error);
         }
 
         // Fetch likes
-        const likeResponse = await fetch(`/api/likes${path}`).catch(() => null);
+        try {
+          const likeResponse = await fetch(`/api/likes${path}`);
 
-        if (likeResponse?.ok) {
-          const data = (await likeResponse.json()) as LikeData;
-          setLikes(data);
+          if (likeResponse?.ok) {
+            const data = (await likeResponse.json()) as LikeApiResponse;
+            if (data && typeof data.count === 'number' && Array.isArray(data.users)) {
+              setLikes(data as LikeData);
 
-          // Check if current user has liked
-          const currentUser = await getCurrentUser();
-          if (currentUser && data.users.some((user) => user.login === currentUser.login)) {
-            setIsLiked(true);
+              // Check if current user has liked
+              const currentUser = await getCurrentUser();
+              if (currentUser && data.users.some((user) => user.login === currentUser.login)) {
+                setIsLiked(true);
+              }
+            }
+          } else {
+            console.warn('Failed to fetch likes:', likeResponse?.status);
           }
+        } catch (error) {
+          console.warn('Error fetching likes:', error);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error in fetchData:', error);
       } finally {
         setIsLoading(false);
       }
@@ -87,9 +111,13 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         method: 'POST',
       });
       if (response.ok) {
-        const data = (await response.json()) as LikeData;
-        setLikes(data);
-        setIsLiked(!isLiked);
+        const data = (await response.json()) as LikeApiResponse;
+        if (data && typeof data.count === 'number' && Array.isArray(data.users)) {
+          setLikes(data as LikeData);
+          setIsLiked(!isLiked);
+        }
+      } else {
+        console.warn('Failed to update like:', response.status);
       }
     } catch (error) {
       console.error('Error updating like:', error);
