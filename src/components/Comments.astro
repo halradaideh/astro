@@ -9,6 +9,10 @@
 
 <script>
   function loadGiscus() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    // Use GitHub's standard themes that work well
+    const giscusTheme = currentTheme === 'dark' ? 'dark_dimmed' : 'light';
+
     const script = document.createElement('script');
     script.src = 'https://giscus.app/client.js';
     script.setAttribute('data-repo', import.meta.env.GISCUS_REPO);
@@ -20,10 +24,7 @@
     script.setAttribute('data-reactions-enabled', '1');
     script.setAttribute('data-emit-metadata', '0');
     script.setAttribute('data-input-position', 'top');
-    script.setAttribute(
-      'data-theme',
-      document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-    );
+    script.setAttribute('data-theme', giscusTheme);
     script.setAttribute('data-lang', 'en');
     script.setAttribute('data-loading', 'lazy');
     script.setAttribute('data-create-issue', 'true');
@@ -38,11 +39,31 @@
     }
   }
 
-  // Load Giscus when the page loads
-  document.addEventListener('DOMContentLoaded', loadGiscus);
+  function updateGiscusTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    // Use GitHub's standard themes that work well
+    const giscusTheme = currentTheme === 'dark' ? 'dark_dimmed' : 'light';
 
-  // Reload Giscus when theme changes
-  document.addEventListener('theme-changed', loadGiscus);
+    // Try to update existing Giscus iframe theme
+    const giscusFrame = document.querySelector('iframe.giscus-frame') as HTMLIFrameElement;
+    if (giscusFrame && giscusFrame.contentWindow) {
+      giscusFrame.contentWindow.postMessage(
+        { giscus: { setConfig: { theme: giscusTheme } } },
+        'https://giscus.app'
+      );
+    } else {
+      // If iframe doesn't exist or can't be updated, reload Giscus
+      setTimeout(loadGiscus, 100);
+    }
+  }
+
+  // Load Giscus when the page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(loadGiscus, 100); // Small delay to ensure theme is set
+  });
+
+  // Update Giscus theme when site theme changes
+  document.addEventListener('theme-changed', updateGiscusTheme);
 </script>
 
 <style>
@@ -50,6 +71,12 @@
     margin-top: 4rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    padding: 2rem;
   }
 
   .comments-container h2 {
@@ -60,5 +87,35 @@
 
   .giscus {
     margin-top: 2rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background-color: transparent;
+  }
+
+  /* Ensure giscus iframe doesn't shrink */
+  .giscus iframe {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    background-color: transparent !important;
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .comments-container {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+    }
+
+    .comments-container h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .giscus {
+      margin-top: 1.5rem;
+    }
   }
 </style>

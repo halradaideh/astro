@@ -31,7 +31,7 @@ const { title, description, image = '/blog-placeholder-1.jpg' } = Astro.props;
 <!-- Security Headers -->
 <meta
   http-equiv="Content-Security-Policy"
-  content="default-src 'self'; script-src 'self' 'unsafe-inline' giscus.app *.giscus.app; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' giscus.app *.giscus.app api.github.com; frame-src giscus.app *.giscus.app;"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' giscus.app *.giscus.app; style-src 'self' 'unsafe-inline' giscus.app *.giscus.app; img-src 'self' data: https:; font-src 'self'; connect-src 'self' giscus.app *.giscus.app api.github.com; frame-src giscus.app *.giscus.app;"
 />
 <meta http-equiv="X-Content-Type-Options" content="nosniff" />
 <meta http-equiv="X-Frame-Options" content="DENY" />

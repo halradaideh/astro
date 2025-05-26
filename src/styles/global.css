@@ -59,6 +59,17 @@
   font-style: normal;
   font-display: swap;
 }
+html {
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
 body {
   margin: 0;
   font-family:
@@ -83,13 +94,19 @@ body {
   overflow-wrap: break-word;
   font-size: 20px;
   line-height: 1.7;
+  min-width: 0;
+  overflow-x: hidden;
 }
+
 main {
   width: 100%;
   max-width: 100%;
   margin: 0;
   padding: 0;
+  min-width: 0;
+  overflow-x: hidden;
 }
+
 h1,
 h2,
 h3,
@@ -184,14 +201,6 @@ blockquote {
 hr {
   border: none;
   border-top: 1px solid var(--border-color);
-}
-@media (max-width: 720px) {
-  body {
-    font-size: 18px;
-  }
-  main {
-    padding: 1em;
-  }
 }
 
 /* Hide text for screen readers only */
@@ -382,5 +391,51 @@ article code {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 0 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 18px;
+  }
+
+  main {
+    padding: 0.5rem;
+  }
+
+  .container {
+    padding: 0 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 16px;
+  }
+
+  main {
+    padding: 0.25rem;
+  }
+
+  .container {
+    padding: 0 0.5rem;
+  }
+}
+
+/* Giscus comments width fix */
+.giscus,
+.giscus iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure comments container doesn't shrink */
+.comments-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }

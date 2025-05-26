@@ -1,10 +1,11 @@
 ---
 const today = new Date();
+const gitVersion = import.meta.env.GIT_VERSION || 'dev';
 ---
 
 <footer class="footer">
   <div class="container">
-    <p>© {today.getFullYear()} Hamdan Radaideh. All rights reserved.</p>
+    <p>© {today.getFullYear()} Hamdan Radaideh. All rights reserved. | v{gitVersion}</p>
     <div class="social-links">
       <a href="https://github.com/halradaideh" target="_blank" rel="noreferrer">
         <span class="sr-only">Go to Hamdan&apos;s GitHub</span>
@@ -90,6 +91,18 @@ const today = new Date();
 
     .footer p {
       font-size: 0.9rem;
+      line-height: 1.4;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .footer p {
+      font-size: 0.8rem;
+      word-break: break-word;
+    }
+
+    .container {
+      padding: 0 0.5rem;
     }
   }
 </style>
