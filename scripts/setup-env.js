@@ -43,6 +43,9 @@ SITE_URL="https://blog.radaideh.info"
 DEV_URL="http://localhost:4321"
 DEV_PORT="4321"
 
+# Version (optional - will be set at deploy time)
+# GIT_VERSION="0.0.36-dirty"
+
 # Giscus Configuration (Real values from your GitHub setup)
 GISCUS_REPO="halradaideh/astro"
 GISCUS_REPO_ID="R_kgDOOvejuw"
@@ -130,7 +133,7 @@ function validateEnv() {
 
   console.log('✅ Environment validation passed! All required variables are set.');
   console.log(`📍 Site URL: ${envVars.SITE_URL}`);
-  console.log(`🚀 Dev URL: ${envVars.DEV_URL}:${envVars.DEV_PORT}`);
+  console.log(`🚀 Dev URL: ${envVars.DEV_URL}`);
   return true;
 }
 

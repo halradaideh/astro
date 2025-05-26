@@ -79,8 +79,8 @@ test.describe('Accessibility', () => {
   test('should have proper heading structure', async ({ page }) => {
     await page.goto('/');
 
-    // Should have h1 tag
-    await expect(page.locator('h1')).toBeVisible();
+    // Should have h1 tag (use first() to handle multiple h1s from dev tools)
+    await expect(page.locator('h1').first()).toBeVisible();
 
     // Check heading hierarchy
     const headings = await page.locator('h1, h2, h3, h4, h5, h6').all();
