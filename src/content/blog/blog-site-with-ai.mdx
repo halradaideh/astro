@@ -5,8 +5,8 @@ pubDate: '2025-05-25'
 heroImage: '/blog/modern-tech-stack.jpg'
 ---
 
-import { TechStack } from '../../components/TechStack';
-import { Pipeline } from '../../components/Pipeline';
+import TechStack from '../../components/TechStack.astro';
+import Pipeline from '../../components/Pipeline.astro';
 
 Building a modern tech blog used to mean weeks of setup, configuration, and debugging. With AI assistance through Cursor IDE and Claude 3.5/4 Sonnet, I built this entire platform in days, not weeks. Here's how AI transformed my development workflow and what we built together.
 
@@ -33,9 +33,7 @@ Working with Cursor and Claude felt like pair programming with an expert develop
 
 The AI helped me choose and configure a modern stack that prioritizes performance, developer experience, and maintainability:
 
-{/* @ts-ignore */}
-
-<TechStack client:load />
+<TechStack />
 
 ## Project Architecture
 
@@ -150,9 +148,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
 The development process showcased AI's strength in automation and optimization:
 
-{/* @ts-ignore */}
-
-<Pipeline client:load />
+<Pipeline />
 
 ### How AI Accelerated Development
 

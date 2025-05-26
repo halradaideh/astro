@@ -38,10 +38,19 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showLikeDetails, setShowLikeDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    if (!path) {
+      setIsLoading(false);
+      setHasError(true);
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
+      setHasError(false);
+
       try {
         // Fetch views
         try {
@@ -68,12 +77,22 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
           if (likeResponse?.ok) {
             const data = (await likeResponse.json()) as LikeApiResponse;
             if (data && typeof data.count === 'number' && Array.isArray(data.users)) {
-              setLikes(data as LikeData);
+              setLikes({
+                count: data.count,
+                users: data.users || [],
+              });
 
               // Check if current user has liked
-              const currentUser = await getCurrentUser();
-              if (currentUser && data.users.some((user) => user.login === currentUser.login)) {
-                setIsLiked(true);
+              try {
+                const currentUser = await getCurrentUser();
+                if (currentUser && data.users && Array.isArray(data.users)) {
+                  const hasLiked = data.users.some(
+                    (user: GitHubUser) => user && user.login === currentUser.login
+                  );
+                  setIsLiked(hasLiked);
+                }
+              } catch (error) {
+                console.warn('Error checking current user:', error);
               }
             }
           } else {
@@ -84,6 +103,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         }
       } catch (error) {
         console.error('Error in fetchData:', error);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -92,12 +112,12 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
     fetchData();
   }, [path]);
 
-  const getCurrentUser = async () => {
+  const getCurrentUser = async (): Promise<{ login: string } | null> => {
     try {
       const response = await fetch('/api/auth/user');
-      if (response.ok) {
-        const data = (await response.json()) as { login: string };
-        return data;
+      if (response?.ok) {
+        const data = (await response.json()) as { login?: string };
+        return data && data.login ? { login: data.login } : null;
       }
       return null;
     } catch {
@@ -106,18 +126,23 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   };
 
   const handleLike = async () => {
+    if (!path || isLoading) return;
+
     try {
       const response = await fetch(`/api/likes${path}`, {
         method: 'POST',
       });
-      if (response.ok) {
+      if (response?.ok) {
         const data = (await response.json()) as LikeApiResponse;
         if (data && typeof data.count === 'number' && Array.isArray(data.users)) {
-          setLikes(data as LikeData);
+          setLikes({
+            count: data.count,
+            users: data.users || [],
+          });
           setIsLiked(!isLiked);
         }
       } else {
-        console.warn('Failed to update like:', response.status);
+        console.warn('Failed to update like:', response?.status);
       }
     } catch (error) {
       console.error('Error updating like:', error);
@@ -125,10 +150,15 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
   };
 
   const toggleLikeDetails = () => {
-    if (likes.users.length > 0) {
+    if (likes?.users && likes.users.length > 0) {
       setShowLikeDetails(!showLikeDetails);
     }
   };
+
+  // Don't render if there's an error or no path
+  if (hasError || !path) {
+    return null;
+  }
 
   return (
     <div className={`${styles.floatingStats} ${isLoading ? styles.loading : ''}`}>
@@ -136,7 +166,7 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         <span role="img" aria-label="views">
           👀
         </span>
-        <span>{views}</span>
+        <span>{views || 0}</span>
       </div>
 
       <div className={styles.stat}>
@@ -151,13 +181,13 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
         <button
           onClick={toggleLikeDetails}
           className={`${styles.countButton} ${showLikeDetails ? styles.active : ''}`}
-          disabled={isLoading || likes.users.length === 0}
+          disabled={isLoading || !likes?.users || likes.users.length === 0}
         >
-          {likes.count}
+          {likes?.count || 0}
         </button>
       </div>
 
-      {showLikeDetails && likes.users.length > 0 && (
+      {showLikeDetails && likes?.users && likes.users.length > 0 && (
         <div className={styles.likeDetails}>
           <div className={styles.likeDetailsHeader}>
             Liked by:
@@ -170,12 +200,21 @@ const FloatingStats: React.FC<FloatingStatsProps> = ({ path }) => {
             </button>
           </div>
           <div className={styles.userList}>
-            {likes.users.map((user) => (
-              <div key={user.login} className={styles.userItem}>
-                <img src={user.avatar_url} alt={user.login} className={styles.userAvatar} />
-                <span className={styles.userName}>{user.login}</span>
-              </div>
-            ))}
+            {likes.users.map((user) =>
+              user && user.login ? (
+                <div key={user.login} className={styles.userItem}>
+                  <img
+                    src={user.avatar_url || ''}
+                    alt={user.login}
+                    className={styles.userAvatar}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <span className={styles.userName}>{user.login}</span>
+                </div>
+              ) : null
+            )}
           </div>
         </div>
       )}
