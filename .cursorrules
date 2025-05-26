@@ -1,0 +1,112 @@
+# Cursor AI Agent Rules
+
+## 🚨 MANDATORY PRE-RESPONSE PROTOCOL
+
+**BEFORE ANY CODE CHANGES OR TECHNICAL RESPONSES:**
+
+1. **VERIFY** current project state with environment validation
+2. **APPLY** the exact naming conventions, commit formats, and workflow protocols defined in the quick reference
+3. **ENSURE** all required labels are applied to PRs, especially "ready-to-test"
+
+## 📋 REQUIRED CONTEXT FILES
+
+Always include these files in context when responding:
+- `.github/AI_AGENT_QUICKREF.md` - Quick command reference and primary guidelines
+- `package.json` - Project scripts and dependencies
+- `.github/pull_request_template.md` - PR template
+
+## 🛠️ CODE CHANGE PROTOCOL
+
+When making any code changes:
+
+1. **Pre-flight checks:**
+   ```bash
+   npm run validate-env
+   npm run pre-commit
+   ```
+
+2. **Branch creation:**
+   - Use format: `{type}/{scope}/{kebab-case-description}`
+   - Types: feat, fix, refactor, perf, docs, test, ci, chore, hotfix
+
+3. **Pre-commit validation (MANDATORY):**
+   - Run `npm run pre-commit` before every commit
+   - If formatting fails, run `npm run pre-commit:fix` to auto-fix issues
+   - All validation must pass: format:check, lint, typecheck, build
+
+4. **Commit format:**
+   - Use: `{type}({scope}): {description}`
+   - Follow conventional commits specification
+
+5. **PR creation:**
+   - **MANDATORY**: Include `ready-to-test` label on ALL new PRs
+   - Include all required labels: `ready-to-test`, type, size, priority
+   - Use the PR template from `.github/pull_request_template.md`
+
+## 🚀 DEPLOYMENT WORKFLOW
+
+- Create PR with `ready-to-test` label
+- Wait for CI validation
+- Add `ready-to-deploy` label only after approval
+- Use squash merge with branch deletion
+
+## ✅ VALIDATION REQUIREMENTS
+
+Before suggesting any code changes, verify:
+- [ ] Environment is properly configured
+- [ ] Code formatting passes (`npm run format:check`)
+- [ ] Linting passes (`npm run lint`)
+- [ ] TypeScript compilation succeeds (`npm run typecheck`)
+- [ ] Build completes successfully (`npm run build`)
+- [ ] Full pre-commit validation passes (`npm run pre-commit`)
+
+## 🔒 CRITICAL CONSTRAINTS
+
+**NEVER:**
+- Skip environment validation
+- Skip pre-commit validation (`npm run pre-commit`)
+- Commit code with formatting issues
+- Use incorrect naming conventions
+- Create PRs without required labels
+- Merge without CI validation
+- Push directly to main branch
+
+**ALWAYS:**
+- Follow exact protocols from `.github/AI_AGENT_QUICKREF.md`
+- Run `npm run pre-commit` before every commit
+- Use `npm run pre-commit:fix` to auto-fix formatting issues
+- Include `ready-to-test` label on ALL new PRs
+- Include proper error handling
+- Validate changes before committing
+- Use the established workflow sequence
+
+## 📊 STATUS REPORTING
+
+When working on tasks, provide status updates using:
+```
+STATUS: {CREATING_BRANCH|IMPLEMENTING|TESTING|CREATING_PR|WAITING_CI|DEPLOYING}
+BRANCH: {branch-name}
+CHANGES: {brief-description}
+VALIDATION: {PASSED|FAILED|IN_PROGRESS}
+```
+
+## 🎯 PROJECT CONTEXT
+
+This is an Astro-based tech blog with:
+- TypeScript and React components
+- Cloudflare Pages deployment
+- GitHub Actions CI/CD
+- Playwright testing
+- ESLint and Prettier for code quality
+
+## 📝 RESPONSE FORMAT
+
+When providing code solutions:
+1. Reference the specific conventions being followed
+2. Show the exact commands to execute
+3. Include validation steps
+4. Provide error recovery procedures if applicable
+
+---
+
+**COMPLIANCE**: These rules are mandatory. Any deviation must be explicitly documented with reasoning. 
