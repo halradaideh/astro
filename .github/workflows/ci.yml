@@ -121,6 +121,15 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
+      # Set version before building
+      - name: Set deployment version
+        run: |
+          echo "Setting deployment version..."
+          chmod +x scripts/set-deploy-version.sh
+          ./scripts/set-deploy-version.sh
+          source .env.deploy
+          echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_ENV
+
       # Build once and cache
       - name: Build site
         run: |
@@ -315,6 +324,11 @@ jobs:
           fi
           npm install -g npm@${{ env.NPM_VERSION }}
           npm ci --install-links
+          # Set version before building
+          chmod +x scripts/set-deploy-version.sh
+          ./scripts/set-deploy-version.sh
+          source .env.deploy
+          export GIT_VERSION=$GIT_VERSION
           npm run build
           echo "Fresh build completed for commit: ${{ github.sha }}"
 
@@ -412,6 +426,11 @@ jobs:
           echo "Artifacts not available, building locally..."
           npm install -g npm@${{ env.NPM_VERSION }}
           npm ci --install-links
+          # Set version before building
+          chmod +x scripts/set-deploy-version.sh
+          ./scripts/set-deploy-version.sh
+          source .env.deploy
+          export GIT_VERSION=$GIT_VERSION
           npm run build
 
       - name: Verify dist directory
