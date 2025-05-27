@@ -38,3 +38,8 @@ pr_description.md
 # VS Code Local History
 .history
 .ionide
+
+# Test results and reports
+test-results/
+playwright-report/
+coverage/
