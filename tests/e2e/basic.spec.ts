@@ -54,7 +54,7 @@ test.describe('Blog Post', () => {
     await firstPost.click();
 
     // Look for FloatingStats component which contains the visit counter
-    const floatingStats = page.locator('.floatingStats, [class*="floatingStats"]');
+    const floatingStats = page.locator('.floating-stats');
     await expect(floatingStats).toBeVisible({ timeout: 10000 });
 
     // Also check for the views icon specifically

@@ -1,0 +1,145 @@
+---
+interface Props {
+  path: string;
+}
+
+const { path } = Astro.props;
+---
+
+<div class="floating-stats" data-path={path}>
+  <div class="stat">
+    <span class="icon" role="img" aria-label="views">👀</span>
+    <span class="count" id="view-count">0</span>
+  </div>
+</div>
+
+<script>
+  interface ViewData {
+    total: number;
+  }
+
+  class FloatingStats {
+    private element: HTMLElement;
+    private path: string;
+    private viewCountElement: HTMLElement;
+
+    constructor(element: HTMLElement) {
+      this.element = element;
+      this.path = element.dataset.path || '';
+      this.viewCountElement = element.querySelector('#view-count') as HTMLElement;
+
+      this.init();
+    }
+
+    private async init() {
+      await this.fetchAndUpdateViews();
+    }
+
+    private async fetchAndUpdateViews() {
+      try {
+        const response = await fetch(`/api/visit-counter${this.path}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data: ViewData = await response.json();
+          this.updateViewCount(data.total);
+        } else {
+          console.warn('Failed to fetch view count:', response.status);
+        }
+      } catch (error) {
+        console.warn('Error fetching view count:', error);
+        // Gracefully degrade - keep showing 0
+      }
+    }
+
+    private updateViewCount(count: number) {
+      if (this.viewCountElement) {
+        this.viewCountElement.textContent = count.toString();
+      }
+    }
+  }
+
+  // Initialize when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    const statsElement = document.querySelector('.floating-stats') as HTMLElement;
+    if (statsElement) {
+      new FloatingStats(statsElement);
+    }
+  });
+</script>
+
+<style>
+  .floating-stats {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.75rem;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .floating-stats:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-color);
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .icon {
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .count {
+    min-width: 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .floating-stats {
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .icon {
+      font-size: 1rem;
+    }
+  }
+
+  /* Hide on very small screens to avoid clutter */
+  @media (max-width: 480px) {
+    .floating-stats {
+      bottom: 0.75rem;
+      right: 0.75rem;
+      padding: 0.5rem;
+    }
+  }
+
+  /* Ensure it doesn't interfere with other floating elements */
+  @media (max-height: 600px) {
+    .floating-stats {
+      bottom: 1rem;
+    }
+  }
+</style>

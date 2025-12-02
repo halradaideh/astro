@@ -14,7 +14,7 @@ pnpm-debug.log*
 
 
 # environment variables
-.env
+.env*
 .env.production
 
 # macOS-specific files
@@ -38,3 +38,8 @@ pr_description.md
 # VS Code Local History
 .history
 .ionide
+
+# Test results and reports
+test-results/
+playwright-report/
+coverage/
