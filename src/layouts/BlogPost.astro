@@ -100,34 +100,47 @@ const formatISODate = (date: Date | string | undefined) => {
         flex-direction: column;
       }
 
+      html {
+        background: var(--bg-color);
+      }
+
       .page-content {
         flex: 1;
-        background: var(--blog-container-bg);
+        background: var(--bg-color);
         width: 100%;
         margin-top: 2rem;
-        padding-top: 2rem;
+        padding: 2rem 0;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 -4px 12px var(--shadow-color);
-        border-top: 1px solid var(--border-color);
       }
 
       main {
-        width: 100%;
-        max-width: 1200px;
+        width: 90%;
+        max-width: none;
         margin: 0 auto;
-        padding: 0 2rem;
+        padding: 0;
         flex: 1;
+        box-sizing: border-box;
+        background: var(--blog-container-bg);
+        box-shadow: 0 -4px 12px var(--shadow-color);
+        border-top: 1px solid var(--border-color);
+        border-radius: 8px;
+      }
+
+      article {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 2rem;
       }
 
       .hero-image {
         width: 100%;
-        max-width: 800px;
+        max-width: none;
         margin: 0 auto 3rem auto;
-        padding: 1.5rem;
-        background: var(--bg-color);
+        padding: 2rem;
+        background: transparent;
         border-radius: 12px;
-        box-shadow: 0 2px 8px var(--shadow-color);
       }
 
       .hero-image img {
@@ -141,13 +154,14 @@ const formatISODate = (date: Date | string | undefined) => {
       }
 
       .prose {
-        width: 720px;
-        max-width: calc(100% - 2em);
+        width: 100%;
+        max-width: 100%;
         margin: auto;
-        padding: 1em;
+        padding: 2rem;
         color: var(--text-color);
         font-size: 1.1rem;
         line-height: 1.7;
+        box-sizing: border-box;
       }
 
       .prose :global(h1),
@@ -158,11 +172,24 @@ const formatISODate = (date: Date | string | undefined) => {
       .prose :global(h6) {
         color: var(--heading-color);
         margin: 1.5em 0 0.5em 0;
+        width: 100%;
+        max-width: 100%;
       }
 
       .prose :global(p) {
         color: var(--text-color);
         margin: 1.5em 0;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .prose :global(ul),
+      .prose :global(ol) {
+        width: 100%;
+        max-width: 100%;
+        margin: 1em 0;
+        padding-left: 1.5em;
+        box-sizing: border-box;
       }
 
       .prose :global(a) {
@@ -204,13 +231,6 @@ const formatISODate = (date: Date | string | undefined) => {
         margin: 2rem 0;
       }
 
-      .prose :global(pre) {
-        background-color: var(--code-bg);
-        padding: 1em;
-        border-radius: 8px;
-        overflow-x: auto;
-      }
-
       .prose :global(code) {
         font-family: 'Fira Code', monospace;
         font-size: 0.9em;
@@ -226,25 +246,130 @@ const formatISODate = (date: Date | string | undefined) => {
         margin: 0;
         padding-left: 1em;
         color: var(--text-muted);
-      }
-
-      .prose :global(ul),
-      .prose :global(ol) {
-        margin: 1em 0;
-        padding-left: 1.5em;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       .prose :global(li) {
         margin: 0.5em 0;
+        width: 100%;
+        max-width: 100%;
       }
 
-      @media (max-width: 720px) {
+      .prose :global(pre) {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        background-color: var(--code-bg) !important;
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+
+      .prose :global(pre.astro-code) {
+        background-color: var(--code-bg) !important;
+      }
+
+      .prose :global(.astro-code) {
+        background-color: var(--code-bg) !important;
+        color: var(--code-color) !important;
+      }
+
+      .prose :global(table) {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2em 0;
+        overflow-x: auto;
+        display: block;
+        font-size: 0.9em;
+      }
+
+      .prose :global(thead) {
+        display: table-header-group;
+      }
+
+      .prose :global(tbody) {
+        display: table-row-group;
+      }
+
+      .prose :global(tr) {
+        display: table-row;
+      }
+
+      .prose :global(th),
+      .prose :global(td) {
+        display: table-cell;
+        padding: 0.75em 1em;
+        border: 1px solid var(--border-color);
+        text-align: left;
+      }
+
+      .prose :global(th) {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: bold;
+      }
+
+      .prose :global(tbody tr:nth-child(even)) {
+        background-color: var(--hover-bg);
+      }
+
+      @media (max-width: 1024px) {
+        article {
+          padding: 1.5rem;
+        }
+
+        .prose {
+          padding: 1.5rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        article {
+          padding: 1rem;
+        }
+
         .prose {
           font-size: 1rem;
+          padding: 1rem;
         }
 
         .title h1 {
           font-size: 2rem;
+        }
+
+        .hero-image {
+          padding: 1rem;
+          margin-bottom: 2rem;
+        }
+
+        .prose :global(table) {
+          font-size: 0.8em;
+        }
+
+        .prose :global(th),
+        .prose :global(td) {
+          padding: 0.5em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        article {
+          padding: 0.5rem;
+        }
+
+        .prose {
+          padding: 0.5rem;
+          font-size: 0.95rem;
+        }
+
+        .title h1 {
+          font-size: 1.75rem;
+        }
+
+        .hero-image {
+          padding: 0.75rem;
         }
       }
     </style>

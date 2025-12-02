@@ -10,4 +10,17 @@
 
   // Apply theme immediately
   document.documentElement.setAttribute('data-theme', getInitialTheme());
+
+  // Enable transitions after initial paint
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(() => {
+        document.body.classList.add('theme-loaded');
+      });
+    });
+  } else {
+    requestAnimationFrame(() => {
+      document.body.classList.add('theme-loaded');
+    });
+  }
 </script>

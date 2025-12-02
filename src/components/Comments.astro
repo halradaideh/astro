@@ -4,7 +4,9 @@
 
 <div class="comments-container">
   <h2>Comments</h2>
-  <div class="giscus"></div>
+  <div class="giscus-wrapper">
+    <div class="giscus"></div>
+  </div>
 </div>
 
 <script>
@@ -51,16 +53,15 @@
         { giscus: { setConfig: { theme: giscusTheme } } },
         'https://giscus.app'
       );
-    } else {
-      // If iframe doesn't exist or can't be updated, reload Giscus
-      setTimeout(loadGiscus, 100);
     }
   }
 
   // Load Giscus when the page loads
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(loadGiscus, 100); // Small delay to ensure theme is set
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadGiscus);
+  } else {
+    loadGiscus();
+  }
 
   // Update Giscus theme when site theme changes
   document.addEventListener('theme-changed', updateGiscusTheme);
@@ -74,9 +75,9 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    background-color: var(--bg-color);
-    border-radius: 8px;
-    padding: 2rem;
+    background-color: transparent;
+    padding: 2rem 0;
+    min-height: 300px;
   }
 
   .comments-container h2 {
@@ -85,19 +86,24 @@
     color: var(--heading-color);
   }
 
+  .giscus-wrapper {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    position: relative;
+  }
+
   .giscus {
-    margin-top: 2rem;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     background-color: transparent;
   }
 
-  /* Ensure giscus iframe doesn't shrink */
+  /* Ensure giscus iframe doesn't shrink or overflow */
   .giscus iframe {
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 100% !important;
     box-sizing: border-box !important;
     background-color: transparent !important;
   }
@@ -112,10 +118,6 @@
     .comments-container h2 {
       font-size: 1.25rem;
       margin-bottom: 1.5rem;
-    }
-
-    .giscus {
-      margin-top: 1.5rem;
     }
   }
 </style>

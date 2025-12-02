@@ -3,7 +3,6 @@
 This directory needs the following dark tech-themed images:
 
 1. `ddos-shield.jpg` - A matrix-style DDoS protection visualization
-
    - Size: 1200x800px
    - Style: Dark cyberpunk with matrix code rain
    - Colors: Deep green matrix code on black background
@@ -11,7 +10,6 @@ This directory needs the following dark tech-themed images:
    - Theme: The Matrix meets cybersecurity
 
 2. `datacenter-automation.jpg` - A futuristic data center visualization
-
    - Size: 1200x800px
    - Style: Dark tech with neon accents
    - Colors: Deep blue/purple with electric blue highlights
@@ -19,7 +17,6 @@ This directory needs the following dark tech-themed images:
    - Theme: Cyberpunk data center
 
 3. `dns-security.jpg` - A matrix-style DNS security visualization
-
    - Size: 1200x800px
    - Style: Dark tech with matrix elements
    - Colors: Green matrix code on black background

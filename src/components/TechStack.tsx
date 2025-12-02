@@ -1,6 +1,3 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-
 interface LayerProps {
   title: string;
   items: Array<{
@@ -11,22 +8,14 @@ interface LayerProps {
   delay: number;
 }
 
-const Layer = ({ title, items, delay }: LayerProps) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5, delay }}
-    className="layer"
-  >
+const Layer = ({ title, items }: Omit<LayerProps, 'delay'>) => (
+  <div className="layer">
     <div className="layer-title">{title}</div>
     <div className="layer-content">
-      {items.map((item, index) => (
-        <motion.div
+      {items.map((item) => (
+        <div
           key={item.name}
           className="tech-item"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: delay + index * 0.1 }}
           style={{
             backgroundColor: `${item.color}15`,
             border: `1px solid ${item.color}40`,
@@ -45,18 +34,13 @@ const Layer = ({ title, items, delay }: LayerProps) => (
             {item.name}
           </div>
           <div className="tech-description">{item.description}</div>
-        </motion.div>
+        </div>
       ))}
     </div>
-  </motion.div>
+  </div>
 );
 
 export const TechStack = () => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
   const layers = [
     {
       title: 'Frontend',
@@ -106,13 +90,7 @@ export const TechStack = () => {
   ];
 
   return (
-    <motion.div
-      ref={ref}
-      className="tech-stack"
-      initial={{ opacity: 0 }}
-      animate={inView ? { opacity: 1 } : {}}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="tech-stack">
       <style>{`
         .tech-stack {
           padding: 1.5rem;
@@ -151,9 +129,12 @@ export const TechStack = () => {
           border-radius: 8px;
           min-width: 180px;
           flex: 1;
-          transition: all 0.2s ease;
           position: relative;
           background-color: var(--bg);
+        }
+
+        :global(body.theme-loaded) .tech-item {
+          transition: all 0.2s ease;
         }
 
         .tech-item:hover {
@@ -174,16 +155,14 @@ export const TechStack = () => {
           font-weight: 500;
         }
 
-        @media (prefers-color-scheme: dark) {
-          .tech-stack,
-          .tech-description,
-          .layer-title {
-            color: #ffffff;
-          }
-          
-          .tech-item .tech-header {
-            color: #ffffff;
-          }
+        :global([data-theme='dark']) .tech-stack,
+        :global([data-theme='dark']) .tech-description,
+        :global([data-theme='dark']) .layer-title {
+          color: #ffffff;
+        }
+        
+        :global([data-theme='dark']) .tech-item .tech-header {
+          color: #ffffff;
         }
 
         @media (max-width: 768px) {
@@ -202,9 +181,9 @@ export const TechStack = () => {
           }
         }
       `}</style>
-      {layers.map((layer, index) => (
-        <Layer key={layer.title} title={layer.title} items={layer.items} delay={index * 0.2} />
+      {layers.map((layer) => (
+        <Layer key={layer.title} title={layer.title} items={layer.items} />
       ))}
-    </motion.div>
+    </div>
   );
 };

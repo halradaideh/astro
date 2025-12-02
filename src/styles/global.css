@@ -6,12 +6,12 @@
 
 :root {
   /* Light theme */
-  --bg-color: #f4f4f8;
+  --bg-color: #e8e8f0;
   --text-color: #333333;
   --text-muted: #666666;
-  --border-color: #eaeaea;
+  --border-color: #d0d0d8;
   --hover-bg: rgba(0, 0, 0, 0.05);
-  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.08);
   --accent-color: #6b46c1;
   --card-bg: #ffffff;
   --heading-color: #1a1a1a;
@@ -26,12 +26,12 @@
 }
 
 [data-theme='dark'] {
-  --bg-color: #1a1a1a;
+  --bg-color: #0a0a0a;
   --text-color: #ffffff;
   --text-muted: #e0e0e0;
-  --border-color: #333333;
+  --border-color: #444444;
   --hover-bg: rgba(255, 255, 255, 0.1);
-  --shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.3);
   --accent-color: #9f7aea;
   --card-bg: #2d2d2d;
   --heading-color: #ffffff;
@@ -42,7 +42,7 @@
   --inline-code-color: #abb2bf;
   --hero-gradient: linear-gradient(135deg, #6b46c1 0%, #4a1c93 100%);
   --hero-text: #ffffff;
-  --blog-container-bg: #2d2d2d;
+  --blog-container-bg: #2a2a2a;
 }
 
 @font-face {
@@ -86,9 +86,6 @@ body {
     sans-serif;
   background: var(--bg-color);
   color: var(--text-color);
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
   text-align: left;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -96,6 +93,12 @@ body {
   line-height: 1.7;
   min-width: 0;
   overflow-x: hidden;
+}
+
+body.theme-loaded {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 main {
@@ -173,7 +176,7 @@ code {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
 }
 pre {
-  background-color: var(--code-bg);
+  background-color: var(--code-bg) !important;
   border: 1px solid var(--code-border);
   border-radius: 6px;
   padding: 1rem 1.5rem;
@@ -183,6 +186,28 @@ pre {
   line-height: 1.5;
   color: var(--code-color);
 }
+
+/* Override Astro's inline syntax highlighting styles */
+.astro-code,
+pre.astro-code {
+  background-color: var(--code-bg) !important;
+  border: 1px solid var(--code-border) !important;
+}
+
+.astro-code code,
+.astro-code span {
+  background-color: transparent !important;
+}
+
+/* Fix plaintext code blocks in light mode */
+.astro-code[data-language='plaintext'] {
+  color: var(--code-color) !important;
+}
+
+.astro-code[data-language='plaintext'] span {
+  color: var(--code-color) !important;
+}
+
 pre > code {
   background: none;
   padding: 0;
@@ -227,6 +252,9 @@ hr {
   cursor: pointer;
   padding: 0;
   overflow: hidden;
+}
+
+body.theme-loaded .theme-toggle {
   transition: background-color 0.3s ease;
 }
 
@@ -239,6 +267,9 @@ hr {
   top: 2px;
   left: 2px;
   background-color: var(--bg-color);
+}
+
+body.theme-loaded .theme-toggle::before {
   transition:
     transform 0.3s ease,
     background-color 0.3s ease;
@@ -259,6 +290,10 @@ hr {
   height: 16px;
   top: 4px;
   color: var(--bg-color);
+}
+
+body.theme-loaded .sun-icon,
+body.theme-loaded .moon-icon {
   transition: opacity 0.3s ease;
 }
 
@@ -288,18 +323,6 @@ html {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-}
-
-main {
-  background-color: var(--bg-color);
-}
-
-article {
-  background-color: var(--bg-color);
-}
-
-.prose {
-  background-color: var(--bg-color);
 }
 
 /* MDX content styles */
@@ -342,6 +365,11 @@ article code {
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+body.theme-loaded .card,
+body.theme-loaded .container,
+body.theme-loaded .content-container {
   transition:
     background-color 0.3s ease,
     border-color 0.3s ease;
@@ -349,7 +377,7 @@ article code {
 
 /* Syntax highlighting improvements */
 .prose :global(pre) {
-  background-color: var(--code-bg);
+  background-color: var(--code-bg) !important;
   color: var(--code-color);
   border: 1px solid var(--code-border);
   border-radius: 6px;
@@ -358,6 +386,10 @@ article code {
   overflow-x: auto;
   font-size: 0.9em;
   line-height: 1.5;
+}
+
+.prose :global(pre.astro-code) {
+  background-color: var(--code-bg) !important;
 }
 
 .prose :global(pre code) {
@@ -381,6 +413,9 @@ article code {
 /* Images in dark mode */
 [data-theme='dark'] img {
   opacity: 0.8;
+}
+
+body.theme-loaded [data-theme='dark'] img {
   transition: opacity 0.3s ease;
 }
 
@@ -425,11 +460,16 @@ article code {
 }
 
 /* Giscus comments width fix */
-.giscus,
-.giscus iframe {
+.giscus {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.giscus iframe,
+.giscus iframe.giscus-frame {
+  width: 100% !important;
+  max-width: 100% !important;
   box-sizing: border-box !important;
 }
 
