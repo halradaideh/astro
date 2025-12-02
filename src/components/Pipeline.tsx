@@ -1,6 +1,3 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-
 const stages = [
   {
     title: 'Git Push',
@@ -52,27 +49,13 @@ const stages = [
 ];
 
 export const Pipeline = () => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0 }}
-      animate={inView ? { opacity: 1 } : {}}
-      transition={{ duration: 0.8 }}
-      className="pipeline"
-    >
+    <div className="pipeline">
       <div className="pipeline-container">
         {stages.map((stage, index) => (
-          <motion.div
+          <div
             key={stage.title}
             className="pipeline-stage"
-            initial={{ x: 20, opacity: 0 }}
-            animate={inView ? { x: 0, opacity: 1 } : {}}
-            transition={{ delay: index * 0.2, duration: 0.5 }}
             style={{
               backgroundColor: `${stage.color}08`,
               border: `1px solid ${stage.color}20`,
@@ -118,7 +101,7 @@ export const Pipeline = () => {
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
       <style>{`
@@ -140,8 +123,11 @@ export const Pipeline = () => {
           padding: 1rem;
           border-radius: 12px;
           position: relative;
-          transition: all 0.3s ease;
           backdrop-filter: blur(8px);
+        }
+
+        :global(body.theme-loaded) .pipeline-stage {
+          transition: all 0.3s ease;
         }
         
         .stage-content {
@@ -255,6 +241,6 @@ export const Pipeline = () => {
           }
         }
       `}</style>
-    </motion.div>
+    </div>
   );
 };

@@ -1,0 +1,49 @@
+.mermaidContainer {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.mermaidContainer :global(svg) {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+[data-theme='dark'] .mermaidContainer :global(svg) {
+  /* Force all fill colors to dark backgrounds */
+  --mermaid-bg: #334155;
+  --mermaid-text: #f1f5f9;
+}
+
+[data-theme='dark'] .mermaidContainer :global(.node rect),
+[data-theme='dark'] .mermaidContainer :global(.node polygon),
+[data-theme='dark'] .mermaidContainer :global(.node circle),
+[data-theme='dark'] .mermaidContainer :global(.node ellipse),
+[data-theme='dark'] .mermaidContainer :global(.cluster rect) {
+  fill: #334155 !important;
+  stroke: #64748b !important;
+}
+
+[data-theme='dark'] .mermaidContainer :global(.nodeLabel),
+[data-theme='dark'] .mermaidContainer :global(.edgeLabel),
+[data-theme='dark'] .mermaidContainer :global(text),
+[data-theme='dark'] .mermaidContainer :global(.label) {
+  fill: #f1f5f9 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme='dark'] .mermaidContainer :global(.edgeLabel rect) {
+  fill: #1e293b !important;
+}
+
+[data-theme='dark'] .mermaidContainer :global(line),
+[data-theme='dark'] .mermaidContainer :global(path) {
+  stroke: #94a3b8 !important;
+}
