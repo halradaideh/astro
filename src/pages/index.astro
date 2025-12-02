@@ -28,10 +28,15 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
     <main>
       <section class="hero">
         <div class="hero-content">
-          <h1>DevOps & Infrastructure Engineering</h1>
+          <h1>Hamdan Radaideh</h1>
+          <p class="subtitle">
+            Principal Site Reliability Engineer | DevSecOps & Cybersecurity | Cloud Automation
+            Expert
+          </p>
           <p>
-            Exploring cloud-native technologies, infrastructure automation, and site reliability
-            engineering best practices
+            Specializing in highly available, secure, and scalable solutions for cloud
+            infrastructure. Leading teams in DevSecOps practices, infrastructure automation, and
+            observability.
           </p>
           <div class="cta-buttons">
             <a href="/blog" class="cta-button primary">Read Blog</a>
@@ -42,23 +47,35 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
 
       <section class="expertise">
         <div class="container">
-          <h2>Areas of Expertise</h2>
+          <h2>Key Achievements</h2>
           <div class="expertise-grid">
             <div class="expertise-card">
-              <h3>Kubernetes & Containers</h3>
-              <p>Orchestration, deployment strategies, and cluster management</p>
+              <h3>Team Leadership</h3>
+              <p>
+                Built and led high-performing DevOps teams, driving modularization and
+                standardization of infrastructure and CI/CD pipelines
+              </p>
             </div>
             <div class="expertise-card">
-              <h3>Infrastructure as Code</h3>
-              <p>Automation, configuration management, and cloud architecture</p>
+              <h3>Automation & Observability</h3>
+              <p>
+                Co-engineered Vault integrations, OpenTelemetry stacks, and automated cloud
+                infrastructure across GCP, AWS, and Azure
+              </p>
             </div>
             <div class="expertise-card">
-              <h3>CI/CD & DevOps</h3>
-              <p>Pipeline design, automation, and deployment strategies</p>
+              <h3>Secure Infrastructure</h3>
+              <p>
+                Designed highly available, secure solutions using Kubernetes, Vault, Terraform, and
+                Cloudflare Zero Trust
+              </p>
             </div>
             <div class="expertise-card">
-              <h3>Site Reliability</h3>
-              <p>Monitoring, observability, and system optimization</p>
+              <h3>Security & Identity</h3>
+              <p>
+                Implemented SPIRE/SPIFFE for workload identity, SSO integrations, and advanced
+                security automation
+              </p>
             </div>
           </div>
         </div>
@@ -135,6 +152,13 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         opacity: 0.9;
         line-height: 1.6;
         color: var(--hero-text);
+      }
+
+      .hero .subtitle {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0 0 1rem;
+        opacity: 0.95;
       }
 
       .cta-buttons {
