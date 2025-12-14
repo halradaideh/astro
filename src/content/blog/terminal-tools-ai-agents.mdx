@@ -1,0 +1,150 @@
+---
+title: 'Terminal Tools for AI Agents: Lynx and mdv'
+description: 'Discover how Lynx browser and mdv enhance terminal-based workflows with AI agents, making web browsing and markdown viewing more efficient than traditional tools.'
+pubDate: 'Dec 14 2025'
+heroImage: '/blog/mdv.jpg'
+---
+
+In the era of AI agents and automation, the tools we choose for terminal-based workflows matter more than ever. While most developers reach for `curl` and `cat` for quick data retrieval, there are underappreciated gems that dramatically improve how we interact with web content and documentation in terminal environments. Let's explore two such tools: Lynx and mdv.
+
+## The Terminal Renaissance in the AI Era
+
+As AI agents become more sophisticated, they increasingly need to consume web content and documentation. The challenge? Most AI agents work best with clean, structured text rather than raw HTML or unformatted markdown. This is where specialized terminal tools shine.
+
+## Lynx: The Intelligent Web Browser
+
+[Lynx](https://lynx.browser.org/) is a text-based web browser that has been around since 1992, but its value has never been greater than in today's AI-driven workflows.
+
+### Why Lynx Over curl?
+
+While `curl` fetches raw HTML, Lynx renders it into clean, readable text. Consider this comparison:
+
+**Using curl:**
+
+```bash
+curl https://example.com/api-docs
+```
+
+Returns a mess of HTML tags, JavaScript, CSS, and content all jumbled together. Your AI agent then needs to parse HTML, which is error-prone and resource-intensive.
+
+**Using Lynx:**
+
+```bash
+lynx -dump https://example.com/api-docs
+```
+
+Returns clean, formatted text that preserves the document structure without HTML noise. Perfect for AI consumption.
+
+### Real-World Example with AI Agents
+
+Here's how to use Lynx with a CLI-based AI agent like Aider or LLM:
+
+```bash
+# Fetch documentation and pipe it to your AI agent
+lynx -dump -nolist https://docs.python.org/3/library/asyncio.html | \
+  llm "Summarize the key concepts in asyncio"
+
+# Or save it for context
+lynx -dump https://api.github.com/repos/owner/repo > github-repo.txt
+```
+
+### Advanced Lynx Features for Automation
+
+```bash
+# Remove link numbering for cleaner output
+lynx -dump -nolist https://example.com
+
+# Force UTF-8 encoding
+lynx -dump -assume_charset=UTF-8 https://example.com
+
+# Follow redirects and dump final page
+lynx -dump -connect_timeout=10 https://short.url/abc123
+
+# Dump with custom user agent
+lynx -dump -useragent="AI-Agent/1.0" https://api-docs.com
+```
+
+## mdv: Markdown Done Right in the Terminal
+
+[mdv](https://github.com/axiros/terminal_markdown_viewer) is a Python-based markdown viewer that renders markdown files with syntax highlighting, proper formatting, and even theme support.
+
+### The Problem with Plain cat
+
+When you `cat README.md`, you get raw markdown with asterisks, hash symbols, and backticks cluttering the text. For AI agents trying to understand documentation structure, this adds unnecessary noise.
+
+### mdv to the Rescue
+
+```bash
+# Install mdv
+pip install mdv
+
+# View a markdown file with proper formatting
+mdv README.md
+
+# Use with AI agents
+mdv docs/architecture.md | llm "What are the main components?"
+```
+
+### Why mdv Matters for AI Workflows
+
+1. **Structured Output**: mdv preserves heading hierarchy, making it easier for AI to understand document structure
+2. **Code Block Handling**: Syntax highlighting and clear code boundaries help AI identify code snippets
+3. **Link Extraction**: Clean presentation of links without breaking text flow
+4. **Table Rendering**: Proper table formatting that's easier to parse than raw markdown
+
+### Practical Examples
+
+**Reading project documentation:**
+
+```bash
+# Traditional approach
+cat CONTRIBUTING.md | ai-agent analyze
+
+# Better approach
+mdv CONTRIBUTING.md | ai-agent analyze
+```
+
+**Integration with git workflows:**
+
+```bash
+# Review PR description in terminal
+gh pr view 42 --json body -q .body | \
+  mdv - | less
+```
+
+## Configuration Tips
+
+**Lynx configuration** (`~/.lynxrc`):
+
+```bash
+# Optimized for AI agent consumption
+ASSUME_CHARSET=UTF-8
+FORCE_SSL_PROMPT=no
+CONNECT_TIMEOUT=30
+VERBOSE_IMAGES=OFF
+```
+
+**mdv with custom themes:**
+
+```bash
+# Dark terminal theme
+export MDV_THEME="729.8953"
+
+# List available themes
+mdv -T
+```
+
+## Conclusion
+
+In a world where AI agents are becoming central to development workflows, the right terminal tools make all the difference. Lynx and mdv transform messy HTML and raw markdown into clean, structured text that AI agents can efficiently process.
+
+These tools aren't just about nostalgia or minimalism—they're about building robust, efficient pipelines where AI agents can reliably extract and understand information without fighting through formatting noise.
+
+The next time you reach for `curl` or `cat` in your AI workflow, consider whether Lynx or mdv might serve you better. Your AI agents will thank you.
+
+## Resources
+
+- [Lynx Documentation](https://lynx.invisible-island.net/lynx_help/Lynx_users_guide.html)
+- [mdv GitHub Repository](https://github.com/axiros/terminal_markdown_viewer)
+- [Terminal Markdown Viewer Alternatives](https://github.com/topics/markdown-viewer)
+- [Building AI Agent Pipelines](https://github.com/patterns-ai-core/ai-agent-patterns)
