@@ -419,7 +419,22 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
       <div class="projects-grid">
         {
           projects.map((project) => (
-            <article class="project-card" data-category={project.category}>
+            <article
+              class="project-card"
+              data-category={project.category}
+              data-project={JSON.stringify({
+                id: project.id,
+                title: project.title,
+                category: project.category,
+                description: project.description,
+                image: project.image,
+                highlights: project.highlights,
+                techStack: project.techStack,
+                challenges: project.challenges,
+                solution: project.solution,
+                tags: project.tags,
+              })}
+            >
               <div class="project-image-container">
                 {project.image && (
                   <img
@@ -480,6 +495,43 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
       </div>
     </main>
 
+    <!-- Modal for expanded project view -->
+    <div id="projectModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="project-image-container" id="modalImageContainer">
+            <img id="modalImage" src="" alt="" class="project-image" loading="lazy" />
+            <div class="project-category-badge" id="modalCategory"></div>
+            <h2 class="project-title" id="modalTitle"></h2>
+          </div>
+        </div>
+        <div class="modal-body">
+          <p class="project-description" id="modalDescription"></p>
+
+          <div class="project-highlights">
+            <h3>Key Achievements</h3>
+            <ul id="modalHighlights"></ul>
+          </div>
+
+          <div class="project-tech">
+            <h3>Technologies & Tags</h3>
+            <div class="tech-tags" id="modalAllTags"></div>
+          </div>
+
+          <div class="project-details">
+            <div class="detail-section">
+              <h4>Challenge</h4>
+              <p id="modalChallenge"></p>
+            </div>
+            <div class="detail-section">
+              <h4>Solution</h4>
+              <p id="modalSolution"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="footer">
       <div class="container">
         <p>© {new Date().getFullYear()} Hamdan Radaideh. All rights reserved. | v{gitVersion}</p>
@@ -492,7 +544,7 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
       </div>
     </footer>
 
-    <style>
+    <style is:global>
       main {
         width: 100%;
         padding: 2rem 0;
@@ -538,10 +590,10 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
 
       .projects-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 2rem;
         margin-bottom: 3rem;
-        max-width: 1200px;
+        max-width: 1400px;
         margin-left: auto;
         margin-right: auto;
         padding: 0 2rem;
@@ -627,16 +679,16 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         flex-direction: column;
       }
 
-      /* Hide everything when collapsed */
-      .project-card:not(.expanded) .project-image {
-        display: none !important;
-      }
-
-      .project-card:not(.expanded) .project-category-badge {
+      /* Always hide content in grid view - show only in modal */
+      .project-card .project-image {
         display: none;
       }
 
-      .project-card:not(.expanded) .project-content {
+      .project-card .project-category-badge {
+        display: none;
+      }
+
+      .project-card .project-content {
         display: none;
       }
 
@@ -674,6 +726,16 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         overflow: hidden;
         opacity: 0;
         transition: all 0.3s ease;
+      }
+
+      /* Show all content in modal */
+      .modal-body .project-highlights,
+      .modal-body .project-tech,
+      .modal-body .project-details,
+      .modal-body .project-tags {
+        max-height: none;
+        opacity: 1;
+        overflow: visible;
       }
 
       .project-card.expanded .project-highlights,
@@ -827,9 +889,176 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         color: var(--text-color);
       }
 
+      /* Modal Styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 2rem;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal-content {
+        background: var(--bg-color);
+        border-radius: 12px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+        animation: slideUp 0.3s ease;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+        /* Hide scrollbar but keep functionality */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+      }
+
+      .modal-content::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-header {
+        padding: 0;
+      }
+
+      .modal-header .project-image-container {
+        height: 120px;
+        border-radius: 12px 12px 0 0;
+      }
+
+      /* Hide image in modal, only show in cards if needed */
+      .modal-header .project-image {
+        display: none !important;
+      }
+
+      .modal-header .project-title {
+        font-size: 2rem;
+        z-index: 3;
+        color: white;
+      }
+
+      .modal-body {
+        padding: 2rem;
+      }
+
+      .modal-body .project-description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+      }
+
+      /* Ensure tags are styled properly in modal */
+      .modal-body .tag {
+        display: inline-block !important;
+        padding: 0.4rem 0.8rem !important;
+        background: var(--accent-color) !important;
+        color: white !important;
+        border-radius: 4px !important;
+        font-size: 0.85rem !important;
+        margin: 0.25rem !important;
+        border: none !important;
+        transition: transform 0.2s ease;
+      }
+
+      .modal-body .tag:hover {
+        transform: translateY(-2px);
+        background: #667eea !important;
+      }
+
+      .modal-body .tech-tags .tag {
+        background: var(--accent-color) !important;
+        color: white !important;
+        border: none !important;
+      }
+
+      .modal-body .project-tags .tag {
+        background: var(--accent-color) !important;
+        color: white !important;
+        border: none !important;
+      }
+
+      /* Better styling for highlights list */
+      .modal-body .project-highlights ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .modal-body .project-highlights li {
+        color: var(--text-color);
+        padding: 0.5rem 0;
+        font-size: 1rem;
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .modal-body .project-highlights li::before {
+        content: '✓';
+        color: var(--accent-color);
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 1200px) {
+        .projects-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
       @media (max-width: 768px) {
         .projects-grid {
+          grid-template-columns: 1fr;
           padding: 0 1rem;
+        }
+
+        .modal-overlay {
+          padding: 1rem;
+        }
+
+        .modal-content {
+          max-height: 95vh;
+        }
+
+        .modal-header,
+        .modal-body {
+          padding: 1.5rem;
         }
 
         .categories-filter {
@@ -854,6 +1083,32 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
       document.addEventListener('DOMContentLoaded', () => {
         const categoryBtns = document.querySelectorAll('.category-btn');
         const projectCards = document.querySelectorAll('.project-card');
+        const modal = document.getElementById('projectModal');
+
+        // Check if there's a hash in the URL and open that project
+        const checkHashAndOpenModal = () => {
+          const hash = window.location.hash.substring(1); // Remove the #
+          if (hash) {
+            // Find the project card with matching ID
+            const targetCard = Array.from(projectCards).find((card) => {
+              const projectData = JSON.parse(card.getAttribute('data-project'));
+              return projectData.id === hash;
+            });
+
+            if (targetCard) {
+              const projectData = JSON.parse(targetCard.getAttribute('data-project'));
+              openModal(projectData);
+              // Scroll to top after opening modal
+              setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+            }
+          }
+        };
+
+        // Check on page load
+        checkHashAndOpenModal();
+
+        // Also check when hash changes (back/forward navigation)
+        window.addEventListener('hashchange', checkHashAndOpenModal);
 
         // Category filtering
         categoryBtns.forEach((btn) => {
@@ -876,16 +1131,75 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
           });
         });
 
-        // Card expand/collapse - click on image container
+        // Open modal on card click
         projectCards.forEach((card) => {
           const imageContainer = card.querySelector('.project-image-container');
           if (imageContainer) {
             imageContainer.addEventListener('click', (e) => {
               e.stopPropagation();
-              card.classList.toggle('expanded');
+              const projectData = JSON.parse(card.getAttribute('data-project'));
+              openModal(projectData);
             });
           }
         });
+
+        // Close modal - click anywhere on overlay or press ESC
+        modal.addEventListener('click', (e) => {
+          // Close if clicking the overlay itself OR anywhere (including modal content)
+          modal.classList.remove('active');
+        });
+
+        // Prevent closing when clicking modal content itself (optional, remove if not needed)
+        // const modalContent = document.querySelector('.modal-content');
+        // modalContent.addEventListener('click', (e) => {
+        //   e.stopPropagation();
+        // });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal.classList.contains('active')) {
+            modal.classList.remove('active');
+          }
+        });
+
+        function openModal(project) {
+          // Populate modal
+          document.getElementById('modalTitle').textContent = project.title;
+          document.getElementById('modalCategory').textContent = project.category;
+          document.getElementById('modalDescription').textContent = project.description;
+          document.getElementById('modalChallenge').textContent = project.challenges;
+          document.getElementById('modalSolution').textContent = project.solution;
+
+          // Always hide image in modal
+          const modalImage = document.getElementById('modalImage');
+          modalImage.style.display = 'none';
+
+          // Populate highlights
+          const highlightsList = document.getElementById('modalHighlights');
+          highlightsList.innerHTML = '';
+          project.highlights.forEach((highlight) => {
+            const li = document.createElement('li');
+            li.textContent = highlight;
+            highlightsList.appendChild(li);
+          });
+
+          // Populate combined tech stack and tags
+          const allTagsDiv = document.getElementById('modalAllTags');
+          allTagsDiv.innerHTML = '';
+
+          // Combine tech stack and tags, removing duplicates
+          const allTags = [...new Set([...project.techStack, ...project.tags])];
+
+          allTags.forEach((tag) => {
+            const span = document.createElement('span');
+            span.className = 'tag';
+            span.textContent = tag;
+            allTagsDiv.appendChild(span);
+          });
+
+          // Show modal
+          modal.classList.add('active');
+        }
       });
     </script>
   </body>

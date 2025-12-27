@@ -4,6 +4,7 @@ import Navigation from '../components/Navigation.astro';
 import ThemeScript from '../components/ThemeScript.astro';
 import TypewriterHero from '../components/TypewriterHero';
 import InteractiveCard from '../components/InteractiveCard';
+import ProjectsCarousel from '../components/ProjectsCarousel';
 import '../styles/global.css';
 
 const posts = (await getCollection('blog'))
@@ -18,6 +19,80 @@ const roles = [
   'Cloud Automation Specialist',
   'Team Lead & Mentor',
   'Infrastructure Architect',
+];
+
+// Featured projects for carousel
+const featuredProjects = [
+  {
+    id: 'cloudflare-vpn-replacement',
+    title: 'Cloudflare Zero Trust VPN Replacement',
+    category: 'Security',
+    description:
+      'Replaced legacy Cisco AnyConnect VPN infrastructure with Cloudflare Zero Trust solution, eliminating traditional VPN overhead and improving security posture.',
+  },
+  {
+    id: 'netapp-dr-bgp-peering',
+    title: 'Disaster Recovery with NetApp & BGP Peering',
+    category: 'Infrastructure',
+    description:
+      'Architected disaster recovery solution using NetApp replication over GCP-Datacenter interconnect with BGP peering for seamless failover.',
+  },
+  {
+    id: 'gha-oidc-integration',
+    title: 'GitHub Actions OIDC with Vault & GCP',
+    category: 'Security',
+    description:
+      'Implemented secure, keyless authentication for GitHub Actions workflows using OIDC to access Vault secrets and GCP resources.',
+  },
+  {
+    id: 'spire-spiffe-wif',
+    title: 'SPIRE/SPIFFE with GCP Workload Identity',
+    category: 'Security',
+    description:
+      'Implemented zero-trust workload identity using SPIRE/SPIFFE framework integrated with GCP Workload Identity Federation.',
+  },
+  {
+    id: 'kubernetes-migration',
+    title: 'Multi-Platform Kubernetes Migration',
+    category: 'Cloud Infrastructure',
+    description:
+      'Led complete platform migration from AWS to Google Kubernetes Engine with 250+ infrastructure improvements and zero downtime.',
+  },
+  {
+    id: 'github-actions-platform',
+    title: 'Self-Hosted GitHub Actions Platform',
+    category: 'DevOps',
+    description:
+      'Built and scaled self-hosted GitHub Actions platform on GKE with Arc runners, reducing build times by 70% through intelligent resource management.',
+  },
+  {
+    id: 'multi-cloud-iac',
+    title: 'Multi-Cloud Infrastructure as Code',
+    category: 'Infrastructure',
+    description:
+      'Architected comprehensive Terraform infrastructure managing 100+ cloud projects across GCP, AWS, and on-premises systems.',
+  },
+  {
+    id: 'observability-platform',
+    title: 'Enterprise Observability Stack',
+    category: 'Monitoring',
+    description:
+      'Built comprehensive monitoring and alerting platform using Prometheus, Grafana, and OpenTelemetry for distributed systems.',
+  },
+  {
+    id: 'vault-secrets-management',
+    title: 'HashiCorp Vault Deployment',
+    category: 'Security',
+    description:
+      'Deployed enterprise-grade secrets management platform using HashiCorp Vault with automated secret rotation and injection.',
+  },
+  {
+    id: 'argocd-gitops',
+    title: 'GitOps with ArgoCD',
+    category: 'DevOps',
+    description:
+      'Implemented GitOps practices using ArgoCD for declarative infrastructure and application deployment across multiple clusters.',
+  },
 ];
 ---
 
@@ -50,6 +125,14 @@ const roles = [
             <a href="/about" class="cta-button secondary">About Me</a>
           </div>
         </div>
+      </section>
+
+      <section class="projects-showcase">
+        <div class="section-header">
+          <h2>Featured Projects</h2>
+          <p>Explore some of my recent work in DevSecOps, Cloud Infrastructure, and Automation</p>
+        </div>
+        <ProjectsCarousel client:only="react" projects={featuredProjects} />
       </section>
 
       <section class="expertise">
@@ -131,6 +214,31 @@ const roles = [
         color: var(--hero-text);
         padding: 6rem 1rem;
         text-align: center;
+      }
+
+      .projects-showcase {
+        padding: 4rem 0 2rem 0;
+        background: var(--bg-color);
+      }
+
+      .section-header {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 2rem auto;
+        padding: 0 2rem;
+      }
+
+      .section-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+      }
+
+      .section-header p {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        line-height: 1.6;
       }
 
       .hero-content {
