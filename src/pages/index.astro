@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content';
 import Navigation from '../components/Navigation.astro';
 import ThemeScript from '../components/ThemeScript.astro';
+import TypewriterHero from '../components/TypewriterHero';
+import InteractiveCard from '../components/InteractiveCard';
 import '../styles/global.css';
 
 const posts = (await getCollection('blog'))
@@ -9,6 +11,14 @@ const posts = (await getCollection('blog'))
   .slice(0, 3); // Get the 3 most recent posts
 
 const gitVersion = import.meta.env.GIT_VERSION || 'dev';
+
+const roles = [
+  'Principal Site Reliability Engineer',
+  'DevSecOps Expert',
+  'Cloud Automation Specialist',
+  'Team Lead & Mentor',
+  'Infrastructure Architect',
+];
 ---
 
 <html lang="en">
@@ -28,11 +38,7 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
     <main>
       <section class="hero">
         <div class="hero-content">
-          <h1>Hamdan Radaideh</h1>
-          <p class="subtitle">
-            Principal Site Reliability Engineer | DevSecOps & Cybersecurity | Cloud Automation
-            Expert
-          </p>
+          <TypewriterHero client:only="react" titles={roles} />
           <p>
             Specializing in highly available, secure, and scalable solutions for cloud
             infrastructure. Leading teams in DevSecOps practices, infrastructure automation, and
@@ -40,6 +46,7 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
           </p>
           <div class="cta-buttons">
             <a href="/blog" class="cta-button primary">Read Blog</a>
+            <a href="/projects" class="cta-button secondary">View Projects</a>
             <a href="/about" class="cta-button secondary">About Me</a>
           </div>
         </div>
@@ -49,34 +56,26 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         <div class="container">
           <h2>Key Achievements</h2>
           <div class="expertise-grid">
-            <div class="expertise-card">
-              <h3>Team Leadership</h3>
-              <p>
-                Built and led high-performing DevOps teams, driving modularization and
-                standardization of infrastructure and CI/CD pipelines
-              </p>
-            </div>
-            <div class="expertise-card">
-              <h3>Automation & Observability</h3>
-              <p>
-                Co-engineered Vault integrations, OpenTelemetry stacks, and automated cloud
-                infrastructure across GCP, AWS, and Azure
-              </p>
-            </div>
-            <div class="expertise-card">
-              <h3>Secure Infrastructure</h3>
-              <p>
-                Designed highly available, secure solutions using Kubernetes, Vault, Terraform, and
-                Cloudflare Zero Trust
-              </p>
-            </div>
-            <div class="expertise-card">
-              <h3>Security & Identity</h3>
-              <p>
-                Implemented SPIRE/SPIFFE for workload identity, SSO integrations, and advanced
-                security automation
-              </p>
-            </div>
+            <InteractiveCard
+              client:visible
+              title="Team Leadership"
+              description="Built and led high-performing DevOps teams, driving modularization and standardization of infrastructure and CI/CD pipelines"
+            />
+            <InteractiveCard
+              client:visible
+              title="Automation & Observability"
+              description="Co-engineered Vault integrations, OpenTelemetry stacks, and automated cloud infrastructure across GCP, AWS, and Azure"
+            />
+            <InteractiveCard
+              client:visible
+              title="Secure Infrastructure"
+              description="Designed highly available, secure solutions using Kubernetes, Vault, Terraform, and Cloudflare Zero Trust"
+            />
+            <InteractiveCard
+              client:visible
+              title="Security & Identity"
+              description="Implemented SPIRE/SPIFFE for workload identity, SSO integrations, and advanced security automation"
+            />
           </div>
         </div>
       </section>
@@ -137,13 +136,6 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
       .hero-content {
         max-width: 800px;
         margin: 0 auto;
-      }
-
-      .hero h1 {
-        font-size: 3.5rem;
-        margin: 0 0 1rem;
-        font-weight: 700;
-        color: var(--hero-text);
       }
 
       .hero p {
@@ -220,33 +212,6 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 2rem;
-      }
-
-      .expertise-card {
-        padding: 2rem;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        transition:
-          transform 0.2s ease,
-          background-color 0.3s ease;
-      }
-
-      .expertise-card:hover {
-        transform: translateY(-4px);
-      }
-
-      .expertise-card h3 {
-        color: var(--text-color);
-        margin: 0 0 1rem;
-        font-size: 1.5rem;
-      }
-
-      .expertise-card p {
-        color: var(--text-muted);
-        margin: 0;
-        line-height: 1.6;
-        font-size: 1.1rem;
       }
 
       .featured-posts {
