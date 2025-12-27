@@ -1,7 +1,6 @@
 ---
 import Navigation from '../components/Navigation.astro';
 import ThemeScript from '../components/ThemeScript.astro';
-import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
 const projects = [
@@ -442,7 +441,6 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
                     alt={project.title}
                     class="project-image"
                     loading="lazy"
-                    onerror="this.style.display='none'"
                   />
                 )}
                 <div class="project-category-badge">{project.category}</div>
@@ -502,7 +500,7 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
           <div class="project-image-container" id="modalImageContainer">
             <img id="modalImage" src="" alt="" class="project-image" loading="lazy" />
             <div class="project-category-badge" id="modalCategory"></div>
-            <h2 class="project-title" id="modalTitle"></h2>
+            <h2 class="project-title" id="modalTitle">Project Title</h2>
           </div>
         </div>
         <div class="modal-body">
@@ -1144,7 +1142,7 @@ const gitVersion = import.meta.env.GIT_VERSION || 'dev';
         });
 
         // Close modal - click anywhere on overlay or press ESC
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener('click', () => {
           // Close if clicking the overlay itself OR anywhere (including modal content)
           modal.classList.remove('active');
         });
