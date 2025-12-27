@@ -1,0 +1,59 @@
+.typewriter-container {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.typewriter-name {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--hero-text);
+  background: linear-gradient(135deg, var(--hero-text) 0%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.typewriter-title {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.typewriter-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--hero-text);
+  opacity: 0.95;
+}
+
+.typewriter-cursor {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--hero-text);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .typewriter-name {
+    font-size: 2.5rem;
+  }
+
+  .typewriter-text,
+  .typewriter-cursor {
+    font-size: 1.2rem;
+  }
+}

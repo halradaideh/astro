@@ -1,12 +1,77 @@
 ---
 import Layout from '../layouts/Page.astro';
+import Timeline from '../components/Timeline';
+import SkillBars from '../components/SkillBars';
+import CertificateIcons from '../components/CertificateIcons';
+import { certificates } from '../data/certificates';
+
+const timelineData = [
+  {
+    date: 'June 2024 - Present',
+    title: 'Principal DevOps and Site Reliability Engineer / Team Lead',
+    company: 'Atypon, a Wiley Brand',
+    description: [
+      'Built and led high-performance DevOps team, driving modularization across projects',
+      'Co-built HashiCorp Vault using Bank-Vaults FW and Vault Agent integration',
+      'Supervised OpenTelemetry (Otel) adoption stack with Grafana Alloy Agents',
+      'Managed GitHub Actions workflows with Arc over GKE',
+      'Integrated Cloudflare Zero Trust using Terraform and Warp Agents',
+    ],
+  },
+  {
+    date: '2021 - 2024',
+    title: 'Senior DevOps Engineer',
+    company: 'Atypon, a Wiley Brand',
+    description: [
+      'Automated Proxmox hypervisor installation and clustering via PXE',
+      'Managed Atlantis and Citizen for Terraform automation',
+      'Deployed HA Zabbix with cronosync and DRBD',
+      'Automated VM template creation with Packer, Preseed, and Ansible',
+      'Managed GCP networking and IAM with Terraform',
+    ],
+  },
+  {
+    date: '2018 - 2021',
+    title: 'Mid-Level DevOps Engineer',
+    company: 'Atypon, a Wiley Brand',
+    description: [
+      'Dockerized applications and integrated with Kubernetes',
+      'Developed BigIP integration for pool/iRule management',
+      'Created Helm charts for Kubernetes deployments',
+      'Managed ELK stack, Solr, Zookeeper, EFK, PostgreSQL, Prometheus and Grafana',
+      'Administered GCP, AWS, and Azure using Terraform IaC',
+    ],
+  },
+  {
+    date: 'Oct 2017 - Sep 2018',
+    title: 'DevOps Engineer',
+    company: 'Samsung Electronics',
+    description: [
+      'Prepared HPC environment (CUDA - NVIDIA, TensorFlow, and Python)',
+      'Worked with physical super-computers (maintenance and deployment)',
+      'Developed video recognition system using TensorFlow (researching YOLO and YOLO 9000)',
+      'Integrated Git-Swarm with Jenkins using web-hooks to automate deployments',
+      'Built queuing system for deploying operations on super computers using Ruby On Rails',
+      'Developed Android application to collect data for Deep Learning',
+    ],
+  },
+];
+
+const skillsData = [
+  { name: 'Kubernetes & Container Orchestration', level: 95, color: '#326CE5' },
+  { name: 'Cloud Platforms (GCP, AWS, Azure)', level: 90, color: '#FF9900' },
+  { name: 'Infrastructure as Code (Terraform)', level: 92, color: '#7B42BC' },
+  { name: 'CI/CD (GitHub Actions, ArgoCD)', level: 88, color: '#2088FF' },
+  { name: 'Security & Identity (Vault, SPIRE)', level: 85, color: '#FFD814' },
+  { name: 'Observability (Prometheus, Grafana)', level: 87, color: '#F46800' },
+  { name: 'Programming (Python, Go, Bash)', level: 82, color: '#00ADD8' },
+];
 ---
 
 <Layout
   title="About Me"
   description="Principal Site Reliability Engineer at Atypon, a Wiley Brand"
   pubDate={new Date('March 25 2024')}
-  heroImage="/blog-placeholder-about.jpg"
 >
   <div class="profile-container">
     <img src="/blog/profile.jpg" alt="Hamdan Radaideh" class="profile-image" />
@@ -20,78 +85,23 @@ import Layout from '../layouts/Page.astro';
     standardization and modularization across complex environments.
   </p>
 
-  <h2>Current Role</h2>
-  <h3>Principal DevOps and Site Reliability Engineer / Team Lead (June 2024 - Present)</h3>
-  <p>At Atypon, a John Wiley and Sons Brand, I lead a high-performance DevOps team:</p>
-  <ul>
-    <li>Built and led high-performance DevOps team, driving modularization across projects</li>
-    <li>
-      Co-built HashiCorp Vault using Bank-Vaults FW and Vault Agent integration with mutation
-      webhooks
-    </li>
-    <li>Supervised OpenTelemetry (Otel) adoption stack with Grafana Alloy Agents</li>
-    <li>Supervised ArgoCD adoption for continuous delivery</li>
-    <li>Managed GitHub Actions workflows with Arc over GKE</li>
-    <li>Led implementation of WIF with OIDC in GCP for secure identity management</li>
-    <li>
-      Enabled dynamic identity for on-premises workloads by onboarding to SPIRE/SPIFFE framework
-    </li>
-    <li>
-      Integrated Cloudflare Zero Trust using Terraform and Warp Agents for site-to-site connections
-    </li>
-    <li>
-      Built SSO integration with Active Directory (AD), GCP, Google Secure LDAP, and custom local
-      LDAP schema
-    </li>
-  </ul>
-
-  <h2>Previous Experience</h2>
-  <h3>Senior DevOps Engineer (2021 - 2024)</h3>
-  <ul>
-    <li>Automated Proxmox hypervisor installation and clustering via PXE</li>
-    <li>Managed Atlantis and Citizen for Terraform automation</li>
-    <li>Deployed HA Zabbix with cronosync and DRBD</li>
-    <li>Automated VM template creation with Packer, Preseed, and Ansible</li>
-    <li>Adoption of Puppet Configuration management system</li>
-    <li>Managed GCP networking and IAM with Terraform</li>
-    <li>Managed Kubernetes clusters (DC and Cloud) with Rancher and GKE</li>
-  </ul>
-
-  <h3>Mid-Level DevOps Engineer (2018 - 2021)</h3>
-  <ul>
-    <li>Dockerized applications and integrated with Kubernetes</li>
-    <li>Developed BigIP integration for pool/iRule management</li>
-    <li>Automated Jenkins-to-Jira reporting via REST API with Groovy pipelines</li>
-    <li>Created Helm charts for Kubernetes deployments</li>
-    <li>
-      Managed ELK stack, Solr, Zookeeper, EFK, PostgreSQL, Prometheus and Grafana in Kubernetes
-    </li>
-    <li>Administered GCP, AWS with CloudFormation, Azure with Azure DevOps using Terraform IaC</li>
-  </ul>
+  <h2>Career Journey</h2>
+  <Timeline client:visible items={timelineData} />
 
   <h2>Technical Skills</h2>
-  <ul>
-    <li>Container Orchestration: Kubernetes (CKA certified), Docker, Rancher</li>
-    <li>Cloud Platforms: GCP (PCA certified), AWS, Azure</li>
-    <li>
-      Infrastructure as Code: Terraform (HashiCorp certified), Terragrunt, Ansible, Packer, Puppet
-    </li>
-    <li>CI/CD: GitHub Actions (GHA certified), ArgoCD, Jenkins</li>
-    <li>Security: Vault, SPIRE/SPIFFE, Cloudflare Zero Trust, GIAC GSEC certified</li>
-    <li>Observability: OpenTelemetry, Prometheus, Grafana, ELK/EFK, Zabbix</li>
-    <li>Programming: Python, Golang, Bash, JavaScript, Ruby on Rails</li>
-    <li>Networking: Proxmox, Netbox, iptables, tshark, TCP dump</li>
-  </ul>
+  <SkillBars client:visible skills={skillsData} />
 
   <h2>Certifications</h2>
-  <ul>
-    <li>Google Cloud Professional Cloud Architect (PCA)</li>
-    <li>GIAC Security Essentials Certification (GSEC) - with honors</li>
-    <li>Certified Kubernetes Administrator (CKA) - The Linux Foundation</li>
-    <li>GitHub Actions (GHA) - GitHub</li>
-    <li>HashiCorp Certified: Terraform Associate</li>
-    <li>GIAC Advisory Board Member</li>
-  </ul>
+  <div class="certifications-section">
+    <CertificateIcons client:visible certificates={certificates} />
+    <p class="cert-link">
+      <a
+        href="https://www.credly.com/users/hamdan-al-radaideh"
+        target="_blank"
+        rel="noopener noreferrer">View all certifications on Credly →</a
+      >
+    </p>
+  </div>
 
   <h2>Education</h2>
   <ul>
@@ -219,5 +229,18 @@ import Layout from '../layouts/Page.astro';
 
   p {
     color: var(--text-color);
+  }
+
+  .certifications-section {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .cert-link {
+    margin-top: 1rem;
+  }
+
+  .cert-link a {
+    color: var(--accent-color);
   }
 </style>
