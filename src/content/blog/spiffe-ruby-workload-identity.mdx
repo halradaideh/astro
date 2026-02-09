@@ -1,0 +1,376 @@
+---
+title: 'SPIFFE for Ruby: Bringing Zero Trust Identity to Ruby Applications'
+description: 'A native Ruby client for the SPIFFE Workload API, enabling proper workload attestation for Ruby applications and Puppet automation'
+pubDate: '2026-02-09'
+heroImage: '/blog/spiffe-turtle.svg'
+---
+
+import { Mermaid } from '../../components/Mermaid';
+
+### The Missing Piece: Ruby in the SPIFFE Ecosystem
+
+SPIFFE (Secure Production Identity Framework For Everyone) has become the industry standard for Zero Trust workload identity, with [IETF backing since 2024](https://wasmcloud.com/blog/2025-03-04-why-were-adopting-spiffe-for-webassembly-workload-identity) and adoption by major cloud-native projects. Official client libraries exist for **Go, Python, Java, and Rust**—but until now, **Ruby was left out**.
+
+This gap is significant because Ruby powers:
+
+- 🏗️ **Configuration management** (Puppet, Chef)
+- 🌐 **Web applications** (Rails, Sinatra)
+- ⚙️ **DevOps tooling** (CI/CD scripts, automation)
+
+Without a native client, Ruby applications relied on insecure workarounds like subprocess calls that **break process-based attestation**—the core security principle of SPIFFE.
+
+---
+
+### Introducing spiffe-workload: First Ruby Client for SPIFFE
+
+The [spiffe-workload gem](https://github.com/halradaideh/spiffe-rubygem) fills this ecosystem gap with a **production-ready** implementation:
+
+| Feature                 | Description                                |
+| ----------------------- | ------------------------------------------ |
+| **Direct gRPC**         | Unix socket communication—no HTTP exposure |
+| **Process Attestation** | SPIRE verifies your actual Ruby process    |
+| **X.509 & JWT SVIDs**   | Both mTLS certificates and API tokens      |
+| **Auto-Rotation**       | Callback hooks for credential updates      |
+| **Thread-Safe**         | Production-ready for multi-threaded apps   |
+| **Zero Dependencies**   | Only requires `grpc` and `openssl`         |
+
+---
+
+### Why This Matters: Subprocess vs. Native
+
+**The Problem with Shell Commands:**
+
+```ruby
+# ❌ BROKEN: SPIRE attests /bin/sh, not your Ruby app
+svid = `spire-agent api fetch x509`
+```
+
+This approach:
+
+- Attests the wrong process (shell, not Ruby)
+- Allows any process to impersonate your app
+- Breaks Zero Trust security model
+
+**The Solution with Native Library:**
+
+```ruby
+# ✅ CORRECT: SPIRE attests your Ruby process
+require 'spiffe'
+client = Spiffe.workload_api_client
+svid = client.x509_svid  # Cryptographically bound to THIS process
+```
+
+---
+
+### Quick Start: 3 Steps to Zero Trust Identity
+
+**1. Install**
+
+```bash
+gem install spiffe-workload
+```
+
+**2. Register with SPIRE**
+
+```bash
+spire-server entry create \
+  -parentID spiffe://example.org/agent/myhost \
+  -spiffeID spiffe://example.org/myapp \
+  -selector unix:uid:$(id -u) \
+  -selector unix:path:/usr/bin/ruby
+```
+
+**3. Use in Your Code**
+
+```ruby
+require 'spiffe'
+
+# Get your identity
+client = Spiffe.workload_api_client
+svid = client.x509_svid
+puts "Identity: #{svid.spiffe_id}"
+
+# Use for mTLS
+http = Net::HTTP.new('api.example.com', 443)
+http.use_ssl = true
+http.ssl_context = client.tls_context
+response = http.get('/data')
+
+client.shutdown
+```
+
+---
+
+### Real-World Example: Puppet + SPIRE + Vault Integration
+
+**The Challenge:** Configuration management systems traditionally store secrets in Hiera or version control—a critical security vulnerability.
+
+**The Solution:** A production-ready Puppet function that orchestrates the complete flow: SPIRE JWT → Vault auth → Secret retrieval.
+
+#### The Complete Implementation
+
+```ruby
+# modules/spire_vault/lib/puppet/functions/spire_vault/lookup.rb
+Puppet::Functions.create_function(:'spire_vault::lookup') do
+  def lookup(secret_path, options = {})
+    # Step 1: Fetch JWT from SPIRE using spiffe-workload gem
+    client = Spiffe.workload_api_client(socket_path: spire_socket)
+    jwt_svid = client.jwt_svid(audience: jwt_audience)
+
+    # Step 2: Authenticate to Vault with JWT
+    vault_token = vault_login(jwt_svid.token, jwt_role)
+
+    # Step 3: Fetch secret from Vault
+    secret_data = vault_read(secret_path, vault_token)
+
+    # Step 4: Return field or entire secret
+    options['field'] ? secret_data[options['field']] : secret_data
+  end
+end
+```
+
+#### Usage in Puppet Manifests
+
+```puppet
+# Pattern 1: Extract specific field (most common)
+file { '/etc/app/db_password':
+  content => Deferred('spire_vault::lookup', [
+    'kv/data/myapp/database',
+    { 'field' => 'password' }
+  ]),
+  mode => '0600',
+}
+
+# Pattern 2: Multiple secrets in template
+file { '/etc/app/config':
+  content => Deferred('inline_epp', [
+    'DB_HOST=<%= $host %>, DB_PASS=<%= $pass %>',
+    {
+      'host' => Deferred('spire_vault::lookup', ['kv/data/db', {'field' => 'host'}]),
+      'pass' => Deferred('spire_vault::lookup', ['kv/data/db', {'field' => 'password'}])
+    }
+  ]),
+}
+```
+
+#### SPIRE Workload Registration
+
+```yaml
+# Puppet agent identity in SPIRE
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterStaticEntry
+spec:
+  spiffeID: 'spiffe://example.com/puppet/agent'
+  selectors:
+    - 'unix:uid:0' # Root user
+    - 'unix:path:/opt/puppetlabs/puppet/bin/ruby' # Puppet Ruby process
+```
+
+**Impact:**
+
+- ✅ **Zero secrets in Git** - No Hiera eyaml or encrypted data
+- ✅ **Per-node identity** - Each agent attested by SPIRE
+- ✅ **15-30 min TTLs** - Automatic JWT rotation
+- ✅ **Vault policies** - Fine-grained access control by SPIFFE ID
+
+This pattern is in **production use** managing secrets across hundreds of Puppet-managed nodes.
+
+<Mermaid
+  client:load
+  chart={`sequenceDiagram
+    participant P as Puppet Agent
+    participant S as SPIRE Agent
+    participant V as Vault
+    
+    Note over P: Deferred('spire_vault::lookup')
+    P->>S: Request JWT SVID<br/>(via Unix socket)
+    S->>S: Attest Ruby process<br/>(UID + path)
+    S->>P: JWT Token (15-30min TTL)
+    
+    P->>V: Login with JWT + role
+    V->>V: Verify SPIFFE ID
+    V->>P: Vault token
+    
+    P->>V: Read secret + token
+    V->>V: Check policies
+    V->>P: Secret data
+    
+    Note over P: Write to file/config`}
+/>
+
+**Key Advantages:**
+
+1. **Process attestation** - SPIRE verifies `/opt/puppetlabs/puppet/bin/ruby`, not shell
+2. **Deferred execution** - Secrets fetched on agent, not compiled in catalog
+3. **Zero persistent credentials** - JWTs expire, no long-lived tokens
+4. **Audit trail** - Complete chain: SPIFFE ID → Vault role → Secret access
+
+---
+
+### Key Features
+
+#### 🔄 Automatic Rotation
+
+```ruby
+client = Spiffe.workload_api_client
+
+client.on_x509_svid_update do |new_svid|
+  puts "Credential rotated: #{new_svid.leaf_certificate.not_after}"
+  @http_client.ssl_context = client.tls_context
+end
+
+Thread.new { client.watch_x509_svids }
+```
+
+#### 🎫 JWT SVIDs for APIs
+
+```ruby
+jwt = client.jwt_svid(audience: 'api.example.com')
+
+request = Net::HTTP::Get.new('/data')
+request['Authorization'] = "Bearer #{jwt.token}"
+# Token automatically expires in 15-30 minutes
+```
+
+#### 🔐 Both Identity Types
+
+| X.509 SVIDs             | JWT SVIDs               |
+| ----------------------- | ----------------------- |
+| mTLS between services   | HTTP API authentication |
+| Certificate-based       | Token-based             |
+| Works with Envoy, Istio | Works with API gateways |
+| Mutual authentication   | Standard OAuth2 format  |
+
+---
+
+### Completing the SPIFFE Ecosystem
+
+The gem joins official clients for other languages:
+
+| Language | Client Library                                                       | Status                      |
+| -------- | -------------------------------------------------------------------- | --------------------------- |
+| Go       | [go-spiffe](https://github.com/spiffe/go-spiffe)                     | ✅ Official                 |
+| Python   | [py-spiffe](https://github.com/HewlettPackard/py-spiffe)             | ✅ Official                 |
+| Java     | [java-spiffe](https://github.com/spiffe/java-spiffe)                 | ✅ Official                 |
+| Rust     | [spiffe-rs](https://docs.rs/spiffe)                                  | ✅ Official                 |
+| **Ruby** | **[spiffe-workload](https://github.com/halradaideh/spiffe-rubygem)** | **🆕 First Implementation** |
+
+**Architecture:** gRPC over Unix sockets
+
+```ruby
+# Simplified implementation
+@channel = GRPC::Core::Channel.new("unix://#{@socket_path}")
+@stub = SpiffeWorkloadAPI::Stub.new(nil, nil, channel_override: @channel)
+
+def x509_svid
+  response = @stub.fetch_x509_svid(X509SVIDRequest.new)
+  X509SVIDWrapper.new(response.svids.first)
+end
+```
+
+**Performance:** 5-10ms per SVID fetch (cached socket), thread-safe for production use.
+
+---
+
+### Troubleshooting Quick Reference
+
+| Issue                  | Solution                                                       |
+| ---------------------- | -------------------------------------------------------------- |
+| **Socket not found**   | `systemctl status spire-agent` or set `SPIFFE_ENDPOINT_SOCKET` |
+| **No identity issued** | Verify workload entry: `spire-server entry show`               |
+| **Permission denied**  | Add user to spire group: `sudo usermod -a -G spire $USER`      |
+| **Connection timeout** | Check SPIRE agent logs: `journalctl -u spire-agent -f`         |
+
+---
+
+### Production Best Practices
+
+```ruby
+# Always use error handling and cleanup
+begin
+  client = Spiffe.workload_api_client(timeout: 10)
+
+  # Retry transient failures
+  retries = 3
+  begin
+    svid = client.x509_svid
+  rescue Spiffe::WorkloadAPIError => e
+    retries -= 1
+    raise unless retries > 0
+    sleep 2 ** (3 - retries)
+    retry
+  end
+
+  # Use SVID...
+ensure
+  client&.shutdown  # Always clean up
+end
+```
+
+**Checklist:**
+
+- ✅ Set TTLs to 15-30 minutes in SPIRE
+- ✅ Implement rotation callbacks for long-running apps
+- ✅ Never log tokens/certificates
+- ✅ Handle agent unavailability gracefully
+- ✅ Monitor SPIRE agent health
+
+---
+
+### Why This Matters
+
+**Closing the Ruby Gap:** Before this gem, Ruby was the only major language without native SPIFFE support. With [SPIFFE adoption accelerating](https://wasmcloud.com/blog/2025-03-04-why-were-adopting-spiffe-for-webassembly-workload-identity) (IETF backing, WebAssembly integration) and Ruby powering critical infrastructure, this gap was a security liability.
+
+**Key Impact:**
+
+1. 🎯 **First Ruby client** for SPIFFE Workload API—completes the ecosystem
+2. 🔐 **Proper attestation** replaces insecure subprocess workarounds
+3. 🎭 **Puppet transformation** enables Zero Trust configuration management (production-validated with hundreds of nodes)
+4. 🚀 **Production-ready** with thread safety, rotation, and comprehensive error handling
+
+**Real-World Validation:** The Puppet + SPIRE + Vault integration shown above is running in production, demonstrating that Ruby applications can now participate fully in Zero Trust architectures alongside Go, Python, and Java services.
+
+---
+
+### Getting Started
+
+```bash
+# 1. Install
+gem install spiffe-workload
+
+# 2. Register with SPIRE
+spire-server entry create \
+  -spiffeID spiffe://example.org/myapp \
+  -selector unix:path:/usr/bin/ruby
+
+# 3. Use in your code
+require 'spiffe'
+svid = Spiffe.workload_api_client.x509_svid
+puts "Identity: #{svid.spiffe_id}"
+```
+
+---
+
+### Resources
+
+**Project Links:**
+
+- 📦 [GitHub Repository](https://github.com/halradaideh/spiffe-rubygem) — Source and examples
+- 💎 [RubyGems Package](https://rubygems.org/gems/spiffe-workload) — Installation
+- 📖 [SPIFFE Docs](https://spiffe.io/docs/) — Standards and guides
+
+**Production Examples:**
+
+- 🎭 [Puppet + SPIRE + Vault Integration](https://github.com/halradaideh/spiffe-rubygem/tree/main/examples) — Complete implementation
+- 📝 Full function source in the gem repository
+
+**SPIFFE Ecosystem:**
+
+- [Workload API Spec](https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE_Workload_API.md) — Official specification
+- [go-spiffe](https://github.com/spiffe/go-spiffe) — Go implementation
+- [py-spiffe](https://github.com/HewlettPackard/py-spiffe) — Python implementation
+- [java-spiffe](https://github.com/spiffe/java-spiffe) — Java implementation
+
+**Related Posts:**
+
+- [Elevating CI/CD Pipeline Security](/blog/securing-ci-pipelines-zero-trust) — SPIRE for GitHub Actions
