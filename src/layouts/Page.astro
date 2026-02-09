@@ -7,7 +7,7 @@ import ThemeScript from '../components/ThemeScript.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate } = Astro.props;
 
 // Format dates safely
 const formatDate = (date: Date | string | undefined) => {
@@ -47,9 +47,6 @@ const formatISODate = (date: Date | string | undefined) => {
     <div class="page-content">
       <main>
         <article>
-          <div class="hero-image">
-            {heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
-          </div>
           <div class="prose">
             <div class="title">
               <div class="date">
@@ -113,26 +110,6 @@ const formatISODate = (date: Date | string | undefined) => {
         margin: 0 auto;
         padding: 0 2rem;
         flex: 1;
-      }
-
-      .hero-image {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto 3rem auto;
-        padding: 1.5rem;
-        background: var(--bg-color);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px var(--shadow-color);
-      }
-
-      .hero-image img {
-        width: auto;
-        max-width: 100%;
-        height: auto;
-        max-height: 400px;
-        object-fit: contain;
-        margin: 0 auto;
-        display: block;
       }
 
       .prose {

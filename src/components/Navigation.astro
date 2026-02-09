@@ -1,18 +1,38 @@
 ---
 const pathname = Astro.url.pathname;
 import { SITE_TITLE } from '../consts';
+import { certificates } from '../data/certificates';
 ---
 
 <nav class="nav-container">
   <div class="nav-content">
     <div class="nav-left">
       <h2><a href="/">{SITE_TITLE}</a></h2>
+      <div class="cert-badges">
+        {
+          certificates.map((cert) => (
+            <a
+              href={cert.credlyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={cert.name}
+              title={cert.name}
+              class="cert-badge"
+            >
+              <img src={cert.imageUrl} alt={cert.name} loading="lazy" />
+            </a>
+          ))
+        }
+      </div>
     </div>
     <div class="nav-right">
       <div class="nav-links">
         <a href="/" class={pathname === '/' ? 'nav-link active' : 'nav-link'}>Home</a>
         <a href="/blog" class={pathname.startsWith('/blog') ? 'nav-link active' : 'nav-link'}
           >Blog</a
+        >
+        <a href="/projects" class={pathname === '/projects' ? 'nav-link active' : 'nav-link'}
+          >Projects</a
         >
         <a href="/about" class={pathname === '/about' ? 'nav-link active' : 'nav-link'}>About</a>
       </div>
@@ -94,6 +114,49 @@ import { SITE_TITLE } from '../consts';
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .cert-badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .cert-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+  }
+
+  :global(body.theme-loaded) .cert-badge {
+    transition: all 0.2s ease;
+  }
+
+  .cert-badge:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+  }
+
+  .cert-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
   }
 
   .nav-left a {
@@ -263,11 +326,22 @@ import { SITE_TITLE } from '../consts';
     .nav-left {
       flex: 1;
       min-width: 0;
+      gap: 0.5rem;
     }
 
     .nav-left h2 {
       font-size: 1.1rem;
       max-width: 150px;
+    }
+
+    .cert-badges {
+      gap: 0.35rem;
+    }
+
+    .cert-badge {
+      width: 28px;
+      height: 28px;
+      padding: 0.15rem;
     }
 
     .nav-right {
@@ -314,9 +388,23 @@ import { SITE_TITLE } from '../consts';
       gap: 0.25rem;
     }
 
+    .nav-left {
+      gap: 0.4rem;
+    }
+
     .nav-left h2 {
       font-size: 1rem;
       max-width: 120px;
+    }
+
+    .cert-badges {
+      gap: 0.25rem;
+    }
+
+    .cert-badge {
+      width: 20px;
+      height: 20px;
+      padding: 0.1rem;
     }
 
     .nav-right {
