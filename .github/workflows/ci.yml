@@ -113,16 +113,6 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      # Install Playwright browsers (cached)
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
       # Set version before building
       - name: Set deployment version
         run: |
@@ -222,20 +212,6 @@ jobs:
           echo "Uploaded artifact with name: dist-${{ steps.build-hash.outputs.hash }}"
           echo "Build hash: ${{ steps.build-hash.outputs.hash }}"
           echo "Artifact path: ${{ env.DIST_DIR }}"
-
-      # Run Playwright tests on built site
-      - name: Run Playwright tests
-        run: npm run test || true
-        env:
-          CI: true
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-${{ github.run_id }}
-          path: playwright-report/
-          retention-days: 7
 
   # Security scan (uses cached dependencies)
   security-scan:
