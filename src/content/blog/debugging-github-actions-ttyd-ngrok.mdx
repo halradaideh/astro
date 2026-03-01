@@ -1,0 +1,152 @@
+---
+title: 'Debug GitHub Actions in Your Browser: Stop Log Diving'
+description: 'Get instant browser terminal access to your GitHub Actions runner when workflows fail. Debug interactively in minutes'
+pubDate: '2026-02-09T18:00:00'
+heroImage: '/blog/ttyd-debug.png'
+---
+
+import { Mermaid } from '../../components/Mermaid';
+
+Ever wished you could **SSH into your GitHub Actions runner** when something fails?
+
+Now you can—in your browser. No SSH needed.
+
+<Mermaid
+  client:load
+  chart={`graph LR
+    A[Workflow Fails] -->|3 lines of YAML| B[Get URL]
+    B --> C[Debug Live]
+    C --> D[Fix & Done]
+    
+    style C fill:#d4edda`}
+/>
+
+---
+
+### Setup (30 seconds)
+
+**1. Get ngrok token:** [ngrok.com/signup](https://dashboard.ngrok.com/signup) (free)
+
+**2. Add secrets:**
+
+```bash
+gh secret set NGROK_AUTHTOKEN
+gh secret set DEBUG_SESSION_PASSWORD
+```
+
+**3. Add to workflow:**
+
+```yaml
+- if: failure()
+  uses: halradaideh/ttyd-ngrok-debug@v0.0.1
+  with:
+    ngrok_authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
+    password: ${{ secrets.DEBUG_SESSION_PASSWORD }}
+```
+
+**Done.** Next failure → logs show URL → click → debug → close with:
+
+```bash
+touch /tmp/terminate_debugging
+```
+
+---
+
+### Example: Debug Failing Tests
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test
+
+      - if: failure()
+        uses: halradaideh/ttyd-ngrok-debug@v0.0.1
+        with:
+          ngrok_authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
+```
+
+**In browser terminal:**
+
+```bash
+npm test -- --verbose
+env | grep NODE
+node --inspect test/failing.js
+```
+
+---
+
+### Why It's Better
+
+| Before                                 | After                       |
+| -------------------------------------- | --------------------------- |
+| Push → Wait → Read logs → Repeat (10x) | Open URL → Debug → Fix (1x) |
+| Hours                                  | Minutes                     |
+
+````
+
+---
+
+### Pro Tips
+
+**Manual trigger:**
+```yaml
+on: [push, workflow_dispatch]
+- if: github.event_name == 'workflow_dispatch'
+  uses: halradaideh/ttyd-ngrok-debug@v0.0.1
+````
+
+**Debug specific OS:**
+
+```yaml
+- if: matrix.os == 'macos-latest' && failure()
+  uses: halradaideh/ttyd-ngrok-debug@v0.0.1
+```
+
+**tmux shortcuts:**
+
+```
+Ctrl+b "  → split horizontal
+Ctrl+b %  → split vertical
+Ctrl+b c  → new window
+```
+
+---
+
+### How It Works
+
+<Mermaid
+  client:load
+  chart={`graph TB
+    W[Workflow] -->|starts| T[ttyd]
+    T -->|via| N[ngrok]
+    N -->|HTTPS URL| B[Browser]
+    
+    style T fill:#e7f3ff
+    style N fill:#d4edda`}
+/>
+
+Three static binaries run on your runner:
+
+- **ttyd** - Web terminal
+- **tmux** - Persistent session
+- **ngrok** - Secure tunnel
+
+---
+
+### FAQ
+
+**Q: Private repos?** Yes.  
+**Q: Cost?** ngrok free + normal runner minutes.  
+**Q: Multi-user?** Yes, share the URL.  
+**Q: Self-hosted?** Yes, any Linux runner.
+
+---
+
+### Resources
+
+- 🎬 [GitHub Marketplace](https://github.com/marketplace/actions/ttyd-ngrok-debug)
+- 📦 [Source Code](https://github.com/halradaideh/ttyd-ngrok-debug)
+- 🛠️ [ttyd](https://github.com/tsl0922/ttyd) | [ngrok](https://ngrok.com/)
