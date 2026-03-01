@@ -31,8 +31,6 @@
     "format:check": "prettier --check .",
     "pre-commit": "npm run format:check && npm run lint && npm run typecheck && npm run build",
     "pre-commit:fix": "npm run format && npm run lint:fix && npm run typecheck && npm run build",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
     "typecheck": "tsc --noEmit",
     "analyze": "npx @next/bundle-analyzer build",
     "lighthouse": "npx lighthouse http://localhost:4321 --output=html --output-path=./lighthouse-report.html",
@@ -60,7 +58,6 @@
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.4",
     "@cloudflare/workers-types": "^4.20250524.0",
-    "@playwright/test": "^1.52.0",
     "@types/node": "^22.15.21",
     "@types/react": "^18.3.22",
     "@types/react-dom": "^18.3.7",
