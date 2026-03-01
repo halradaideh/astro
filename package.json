@@ -31,6 +31,7 @@
     "format:check": "prettier --check .",
     "pre-commit": "npm run format:check && npm run lint && npm run typecheck && npm run build",
     "pre-commit:fix": "npm run format && npm run lint:fix && npm run typecheck && npm run build",
+    "typecheck": "tsc --noEmit",
     "analyze": "npx @next/bundle-analyzer build",
     "lighthouse": "npx lighthouse http://localhost:4321 --output=html --output-path=./lighthouse-report.html",
     "security-audit": "npm audit --audit-level moderate",
