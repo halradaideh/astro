@@ -364,12 +364,10 @@ jobs:
             kill -9 $SERVER_PID 2>/dev/null || true
           fi
 
-  # Release preparation (only when ready-to-deploy label is added)
+  # Release preparation (only after merge to main, so a PR is never tagged/released twice)
   prepare-release:
     needs: [build-and-test, performance-test] # Removed security-scan dependency
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.versioning.outputs.new_version }}
@@ -515,14 +513,14 @@ jobs:
               }
             }
 
-  # Deploy (reuses the same build artifacts)
+  # Deploy (reuses the same build artifacts). Runs only on push to main so a
+  # PR labeled ready-to-deploy doesn't ship a production deploy that then
+  # repeats when the merge itself pushes to main.
   deploy:
     needs: [prepare-release, build-and-test]
     runs-on: ubuntu-latest
     environment: production
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'ready-to-deploy') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
@@ -844,30 +842,6 @@ jobs:
               environment_url: 'https://${{ env.CUSTOM_DOMAIN }}',
               description: status === 'success' ? 'Deployment successful' : 'Deployment failed',
               log_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`
-            });
-
-      - name: Update PR Labels
-        if: success() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // Remove ready-to-deploy label and add deployed label
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                name: 'ready-to-deploy'
-              });
-            } catch (error) {
-              console.log('ready-to-deploy label not found or already removed');
-            }
-
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['deployed']
             });
 
       - name: Notify on Failure
