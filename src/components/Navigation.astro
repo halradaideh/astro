@@ -2,6 +2,7 @@
 const pathname = Astro.url.pathname;
 import { SITE_TITLE } from '../consts';
 import { certificates } from '../data/certificates';
+import { certificateFallbackLabel } from '../lib/certificates';
 ---
 
 <nav class="nav-container">
@@ -12,14 +13,18 @@ import { certificates } from '../data/certificates';
         {
           certificates.map((cert) => (
             <a
-              href={cert.credlyUrl}
+              href={cert.verifyUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={cert.name}
               title={cert.name}
               class="cert-badge"
             >
-              <img src={cert.imageUrl} alt={cert.name} loading="lazy" />
+              {cert.imageUrl ? (
+                <img src={cert.imageUrl} alt={cert.name} loading="lazy" />
+              ) : (
+                <span class="cert-badge-fallback">{certificateFallbackLabel(cert.name)}</span>
+              )}
             </a>
           ))
         }
@@ -157,6 +162,17 @@ import { certificates } from '../data/certificates';
     height: 100%;
     object-fit: contain;
     display: block;
+  }
+
+  .cert-badge-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-color);
   }
 
   .nav-left a {
