@@ -1,0 +1,198 @@
+---
+title: 'Cordless Terraform: Applying Infrastructure Without a Single Line of Code in Your Repo'
+description: 'A CI-native pattern for self-service Terraform: shared modules, per-input workspaces, and ephemeral variables — no .tf files, no generated tfvars, nothing committed to your repository'
+pubDate: '2026-07-10'
+---
+
+import { Mermaid } from '../../components/Mermaid';
+
+### The Idea
+
+Every team that wants infrastructure ends up with the same conversation: "just give us a repo, write some Terraform, open a PR." That's fine for the platform team maintaining the modules. It's friction for everyone else — a service team that just needs a bucket, a queue, and a database doesn't want to learn HCL, doesn't want to own a `.tf` file, and definitely doesn't want to be responsible for a `terraform state` they'll never touch again.
+
+The approach I've been using strips that friction down to almost nothing:
+
+- A **shared Terraform module** (and the providers it needs) lives once, in a platform-owned location — never copied into consumer repos.
+- A **Terraform workspace** is selected or created per request, keyed off the caller's input (environment, team, resource name — whatever you choose as the key).
+- The CI system takes **input only** — a form, a `workflow_dispatch` payload, an API call — and feeds it straight into `terraform apply` as variables.
+- **Nothing gets committed.** No `.tf` file, no generated `tfvars` file, no scaffolding PR. The consumer's repository — if there even is one — never sees Terraform code.
+
+Before writing more code around this, I wanted to know: is this already a solved problem with a name, or am I reinventing something?
+
+---
+
+### Is This a Known Pattern? Short Answer: Mostly, Yes
+
+Researching this landed on a clear picture: **the general category is well established and even productized**, but the specific shape — driven by _your own_ CI system, with _zero_ git footprint, not even generated files — is a thinner, less-documented corner of it.
+
+#### HashiCorp's own answer: No-Code Provisioning
+
+HCP Terraform and Terraform Enterprise ship an official feature called **[No-Code Provisioning](https://developer.hashicorp.com/terraform/tutorials/cloud/no-code-provisioning)**. A platform team marks a module version "No-code Ready" in the private registry; end users pick that module, fill in a web form for the variables, and HCP Terraform creates a workspace and runs the apply for them — [no HCL required](https://www.hashicorp.com/en/blog/terraform-without-writing-code-how-to-build-self-service-with-no-code-modules). This is, almost exactly, the pattern I'd sketched out — it's just tied to HashiCorp's own hosted "CI system" (HCP Terraform's run environment) rather than your GitHub Actions or GitLab CI pipeline, and it's a commercial-tier feature.
+
+#### The open-source approximations all commit _something_
+
+Looking at the OSS side — [Atlantis](https://spacelift.io/blog/atlantis-terragrunt) with a [Terragrunt catalog](https://github.com/transcend-io/terragrunt-atlantis-config), or [Backstage Software Templates](https://medium.com/@_gdantas/backstage-and-terraform-a-powerful-combination-for-ops-wonderful-for-devs-c04ebce849f0) backing a service catalog UI — the pattern is consistently: _the self-service experience is a form, but under the hood the automation still generates a `terragrunt.hcl` or `tfvars` file and commits it to version control._ That's a deliberate GitOps choice, not an oversight — [Gruntwork's guidance on self-service](https://docs.gruntwork.io/guides/production-framework/ingredients/self-service/how-self-service-should-work/) is explicit that even a slick UI should "operate via commits to version control" underneath, so the git history stays the source of truth for what's deployed.
+
+A few teams take this further with a fully issue-driven flow: a GitHub Issue form gets parsed into a config object, a script updates the environment's `tfvars` file, and a bot opens the PR automatically. It's self-service, but it's still git-mediated — a human-authored `.tf` file just gets replaced by a bot-authored `tfvars` file.
+
+#### Crossplane: the closest thing to truly code-free, but a different animal
+
+[Crossplane](https://blog.crossplane.io/crossplane-vs-terraform/) gets closest to "no code, ever" — a platform team defines a Composite Resource Definition (XRD) and Composition once, and a developer requests infrastructure with a few lines of YAML (a `Claim`), no Terraform involved at all. But it's architecturally a different beast: a Kubernetes control loop that reconciles continuously, not an on-demand `plan`/`apply` cycle, and it only makes sense if you're already running Crossplane inside a cluster.
+
+#### The gap
+
+| Approach                                 | Runs on                       | Consumer writes code? | Anything committed to git?               | Vendor lock-in |
+| ---------------------------------------- | ----------------------------- | --------------------- | ---------------------------------------- | -------------- |
+| Hand-written Terraform per team          | Any CI                        | Yes (`.tf`)           | Yes                                      | None           |
+| **HCP Terraform No-Code Provisioning**   | HCP Terraform's runners       | No                    | N/A (state lives in HCP)                 | HCP Terraform  |
+| Atlantis + Terragrunt catalog            | Any CI (PR-triggered)         | No (form/catalog)     | Yes — generated `terragrunt.hcl`         | None           |
+| Backstage Software Template              | Any CI (template commits)     | No (form)             | Yes — generated `tfvars`/`hcl`           | None           |
+| Crossplane Compositions                  | Kubernetes control loop       | No (YAML claim)       | Optional (claim can be applied directly) | Kubernetes     |
+| **Cordless: workspace + ephemeral vars** | **Your own CI, any provider** | **No**                | **No — nothing at all**                  | **None**       |
+
+That bottom-right cell is the gap: nobody else combines _your own CI system_ with _zero git footprint, including generated files_. That's the actual novelty here — not the self-service idea itself (that's well trodden), but skipping the "generate-and-commit" step that every OSS implementation treats as non-negotiable.
+
+---
+
+### How It Works
+
+<Mermaid
+  client:load
+  chart={`graph LR
+    subgraph "Caller"
+        I[Input: workflow_dispatch,<br/>API call, or form]
+    end
+
+    subgraph "CI Pipeline"
+        S[Select / create<br/>Terraform workspace]
+        V[Inject input as<br/>-var / TF_VAR_*]
+        A[terraform apply]
+    end
+
+    subgraph "Platform-owned, once"
+        M[Shared module +<br/>provider config]
+        B[Remote state backend<br/>keyed by workspace]
+    end
+
+    I --> S
+    S --> V
+    V --> A
+    M --> A
+    A --> B
+
+    style I fill:#e7f3ff
+    style M fill:#fff3cd
+    style B fill:#fff3cd`}
+
+/>
+
+Four pieces, and the discipline is in keeping each one exactly this narrow:
+
+1. **One module, one place.** The Terraform code — resources, providers, versions — is written once by the platform team and lives in a module registry or a fixed path the pipeline checks out at run time. Consumers never see it, let alone fork it.
+2. **Workspace per input, not per repo.** `terraform workspace select -or-create=true "$WORKSPACE_KEY"` derives the workspace name from the input (team name, environment, request ID). The workspace _is_ the record of "what was requested" — no separate config file needed to track it.
+3. **Variables travel as data, not as code.** Input arrives as CI parameters (`workflow_dispatch` inputs, an issue form, a JSON payload from an internal API) and gets passed straight to `terraform apply -var="size=${{ inputs.size }}"` or as `TF_VAR_*` environment variables. Nothing is written to disk beyond the ephemeral runner's workspace, which is discarded when the job ends.
+4. **State is the audit trail.** Because nothing is committed, `terraform state` plus the CI run's own logs (which already capture every input and every plan/apply output) become the record of what happened — not a git diff.
+
+---
+
+### Reference Implementation
+
+A minimal `workflow_dispatch`-triggered example — no `tfvars`, no scaffolding, no PR:
+
+```yaml
+name: Provision Resource
+
+on:
+  workflow_dispatch:
+    inputs:
+      team:
+        description: 'Requesting team'
+        required: true
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options: [dev, staging, prod]
+      size:
+        description: 'Instance size'
+        required: true
+        type: choice
+        options: [small, medium, large]
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout shared module only
+        uses: actions/checkout@v4
+        with:
+          repository: platform-team/terraform-modules
+          path: module
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Select or create workspace
+        working-directory: module
+        run: |
+          terraform init
+          terraform workspace select -or-create=true \
+            "${{ inputs.team }}-${{ inputs.environment }}"
+
+      - name: Apply from input only
+        working-directory: module
+        env:
+          TF_VAR_team: ${{ inputs.team }}
+          TF_VAR_environment: ${{ inputs.environment }}
+          TF_VAR_size: ${{ inputs.size }}
+        run: terraform apply -auto-approve
+```
+
+The consumer's repository — if `workflow_dispatch` is triggered from one at all — contains this workflow file and nothing else. No module code, no `tfvars`, no state.
+
+---
+
+### Trade-offs and Guardrails
+
+Nothing here is free. Skipping the "generate-and-commit" step that Atlantis and Backstage deliberately keep means giving up the audit trail git normally provides, and it opens the door to a specific new risk:
+
+- **Audit trail moves from git to CI logs.** That's fine as long as your CI system retains run history and logs input values durably. If your CI logs rotate aggressively or you can't attribute a run to a human identity, you've lost the record `git blame` used to give you for free. Ship CI logs to long-term storage before relying on this.
+- **Unrestricted variable input is an injection surface.** If `size` becomes an arbitrary string instead of a `choice` enum, a caller can potentially reach variables the module author never intended to expose. Constrain every input to an enum or a validated pattern at the CI level (`type: choice` in the example above), and validate again inside the module with [`variable` validation blocks](https://developer.hashicorp.com/terraform/language/values/variables#custom-validation-rules) — never trust CI input as pre-sanitized.
+- **No plan-then-review gate by default.** PR-based flows get a human review step for free; this doesn't. Add a policy-as-code gate (OPA, Sentinel, or even a manual `environment` approval in GitHub Actions) between `plan` and `apply` if the blast radius warrants it — production workspaces especially.
+- **State sprawl.** One workspace per input scales fine until nobody remembers what half of them are for. Key the workspace name so it's self-describing, and add a scheduled job that lists workspaces with no corresponding CI runs in N days and flags them for cleanup.
+
+---
+
+### When to Reach for This vs. Something Else
+
+- **Already paying for HCP Terraform or Terraform Enterprise?** Use their native No-Code Provisioning — it's the same idea, hardened and supported, with version upgrade flows built in.
+- **Need a reviewable git history of every change, non-negotiably?** Use Atlantis or a Backstage-backed catalog — the generated-file-in-git step is a feature there, not overhead.
+- **Already running Crossplane in Kubernetes and want continuous reconciliation, not on-demand apply?** Use Compositions and Claims instead.
+- **Want self-service infrastructure driven entirely by your own CI, for low-blast-radius resources, without adopting a new platform?** This is the gap this pattern fills.
+
+---
+
+### Key Takeaways
+
+1. **The category is solved; the specific shape isn't.** Self-service, no-code Terraform provisioning is a known, named, productized pattern (HCP Terraform No-Code Provisioning). A vendor-agnostic, zero-git-footprint version built on your own CI is the less-charted variant.
+2. **Every OSS approximation still commits something.** Atlantis, Terragrunt catalogs, and Backstage templates all intentionally generate and commit config — that's their audit trail. Skipping it is a trade-off, not a free win.
+3. **Workspace-per-input replaces file-per-environment.** The workspace name, derived from the input, is the record — you don't need a `tfvars` file to track what was requested.
+4. **Guardrails matter more here, not less.** Enum-constrained inputs, module-level validation, and a policy gate before `apply` are what keep "code-free" from becoming "review-free."
+
+---
+
+### Conclusion
+
+This isn't a brand-new invention — it's a known category of self-service, no-code Terraform provisioning, with HashiCorp's own No-Code Provisioning as the productized reference. What's genuinely underexplored is the version that doesn't ask you to adopt HCP Terraform, Atlantis, Backstage, or Kubernetes to get there: a shared module, a workspace keyed by input, and variables that never touch disk longer than a single CI run. For low-risk, high-frequency provisioning requests, it's a lightweight way to get the self-service win without taking on a new platform.
+
+---
+
+**Further Reading:**
+
+- [Terraform without writing code: How to build self-service with no-code modules](https://www.hashicorp.com/en/blog/terraform-without-writing-code-how-to-build-self-service-with-no-code-modules) — HashiCorp
+- [Create and use no-code modules](https://developer.hashicorp.com/terraform/tutorials/cloud/no-code-provisioning) — Terraform Docs
+- [Design no-code ready modules for HCP Terraform](https://developer.hashicorp.com/terraform/cloud-docs/no-code-provisioning/module-design) — Terraform Docs
+- [How Self-Service Should Work](https://docs.gruntwork.io/guides/production-framework/ingredients/self-service/how-self-service-should-work/) — Gruntwork
+- [Atlantis with Terragrunt: The Complete Guide](https://spacelift.io/blog/atlantis-terragrunt) — Spacelift
+- [Backstage and Terraform](https://medium.com/@_gdantas/backstage-and-terraform-a-powerful-combination-for-ops-wonderful-for-devs-c04ebce849f0) — Gabriel Dantas
+- [Crossplane vs Terraform](https://blog.crossplane.io/crossplane-vs-terraform/) — Crossplane
+- [Terraform custom validation rules](https://developer.hashicorp.com/terraform/language/values/variables#custom-validation-rules) — Terraform Docs
