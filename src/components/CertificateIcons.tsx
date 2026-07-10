@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
+import { certificateFallbackLabel } from '../lib/certificates';
 import styles from './CertificateIcons.module.css';
 
 export interface CertificateIcon {
   name: string;
-  imageUrl: string;
-  credlyUrl: string;
+  imageUrl?: string;
+  verifyUrl: string;
 }
 
 interface CertificateIconsProps {
@@ -17,7 +18,7 @@ export default function CertificateIcons({ certificates }: CertificateIconsProps
       {certificates.map((cert, index) => (
         <motion.a
           key={index}
-          href={cert.credlyUrl}
+          href={cert.verifyUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles['cert-icon']}
@@ -27,7 +28,13 @@ export default function CertificateIcons({ certificates }: CertificateIconsProps
           transition={{ duration: 0.3, delay: index * 0.1 }}
           whileHover={{ scale: 1.15, y: -3 }}
         >
-          <img src={cert.imageUrl} alt={cert.name} loading="eager" />
+          {cert.imageUrl ? (
+            <img src={cert.imageUrl} alt={cert.name} loading="eager" />
+          ) : (
+            <span className={styles['cert-icon-fallback']}>
+              {certificateFallbackLabel(cert.name)}
+            </span>
+          )}
         </motion.a>
       ))}
     </div>
